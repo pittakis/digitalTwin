@@ -1,2 +1,2 @@
 cd backend
-uvicorn main:app --reload
+uvicorn main:app --port 7781 --reload
