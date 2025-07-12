@@ -1,0 +1,9 @@
+
+fastapi
+uvicorn
+python-jose
+python-multipart
+python-dotenv
+psycopg2-binary
+pythermalcomfort
+paho-mqtt
