@@ -200,7 +200,7 @@ const styles = {
   temp: { fontSize: "1.6rem", margin: "0.25rem 0" },
   desc: { textTransform: "capitalize", fontSize: "0.9rem", color: "#555" },
   details: { fontSize: "0.75rem", color: "#777" },
-  notificationsContainer: { position: "fixed", bottom: 0, left: "380px", right: 0, height: "400px", background: "#f9f9f9", padding: "1rem", borderTop: "1px solid #ddd", display: "flex", flexDirection: "column", zIndex: 100 },
+  notificationsContainer: { position: "fixed", bottom: 0, left: "380px", right: 0, height: "40%", background: "#f9f9f9", padding: "1rem", borderTop: "1px solid #ddd", display: "flex", flexDirection: "column", zIndex: 100 },
   notificationsHeader: { flex: "0 0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", fontWeight: "bold" },
   filterControls: { display: "flex", gap: "0.5rem", alignItems: "center" },
   dropdown: { padding: "0.5rem", fontSize: "0.9rem", borderRadius: "6px", border: "1px solid #ccc" },
