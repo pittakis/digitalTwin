@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 
-
 function EnergyOverview() {
   const navigate = useNavigate();
   const [data, setData] = useState({});
@@ -28,14 +27,21 @@ function EnergyOverview() {
   }, []);
 
   const renderCard = (id, info) => (
-  <div key={id} style={styles.card}>
-    <h3 style={styles.cardTitle}>🔌 {info.name || "Unnamed Sensor"}</h3>
-    <p><strong>Sensor ID:</strong> {id}</p>
-    <p><strong>Type:</strong> {info.type}</p>
-    <p><strong>Timestamp:</strong> {info.timestamp ? new Date(info.timestamp).toLocaleString() : "N/A"}</p>
-    <p><strong>Active Power:</strong> {info.total_active_power_kw} kW</p>
-    <p><strong>Power Factor:</strong> {info.power_factor}</p>
-  </div>
+    <div key={id} style={styles.card}>
+      <h3 style={styles.cardTitle}>🔌 {id || "Unnamed Sensor"}</h3>
+      <p><strong>Name:</strong> {info.name}</p>
+      <p><strong>Type:</strong> {info.type}</p>
+      <p><strong>Timestamp:</strong> {info.timestamp ? new Date(info.timestamp).toLocaleString() : "N/A"}</p>
+      <p><strong>Active Power:</strong> {info.total_active_power_kw} kW</p>
+      <hr />
+      <p><strong>Power Factor:</strong> {info.power_factor}</p>
+      <p><strong>Phase Imbalance:</strong></p>
+      <ul style={styles.phaseList}>
+        {info.phase_imbalance_percent && Object.entries(info.phase_imbalance_percent).map(([phase, pct]) => (
+          <li key={phase}>{phase}: {pct}%</li>
+        ))}
+      </ul>
+    </div>
   );
 
   return (
@@ -47,7 +53,6 @@ function EnergyOverview() {
       >
         ⬅ Back
       </button>
-
 
       <h2 style={styles.header}>⚡ Energy Meter Overview</h2>
       {loading && <p>Loading data...</p>}
@@ -71,21 +76,27 @@ const styles = {
     marginBottom: "1.5rem",
   },
   grid: {
-    display: "grid",
+    display: "flex",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: "1.5rem",
   },
   card: {
     background: "#fff",
+    width: "400px",
     borderRadius: "1rem",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-    padding: "1.5rem",
+    boxShadow: "0 4px 15px rgba(217,83,79,0.1)",
+    padding: "1.75rem",
     transition: "transform 0.2s",
   },
   cardTitle: {
     marginBottom: "0.75rem",
     fontSize: "1.2rem",
     color: "#333",
+  },
+  phaseList: {
+    listStyle: "none",
+    paddingLeft: "50px",
+    margin: 0,
   },
   error: {
     color: "crimson",

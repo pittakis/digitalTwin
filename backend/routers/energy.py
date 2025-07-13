@@ -11,19 +11,25 @@ def get_all_energy_data():
         raise HTTPException(status_code=500, detail="Database connection failed")
 
     cursor = conn.cursor()
-
-    # Get the latest row per sensor using DISTINCT ON
     cursor.execute("""
         SELECT
-            sensor.id,
-            sensor.name,
-            sensor.last_updated AS timestamp,
-            sensor.latest_data->>'total_act_power' AS total_act_power,
-            sensor.latest_data->>'total_aprt_power' AS total_aprt_power
-        FROM sensors as sensor, sensor_types as stype
-        WHERE sensor.type_id = stype.id
-        AND stype.type = 'EnergyMeter'
-        ORDER BY name, id, timestamp DESC
+            s.id,
+            s.name,
+            s.last_updated AS timestamp,
+            (s.latest_data->>'a_act_power')::float    AS a_act,
+            (s.latest_data->>'b_act_power')::float    AS b_act,
+            (s.latest_data->>'c_act_power')::float    AS c_act,
+            (s.latest_data->>'total_act_power')::float  AS total_act,
+            (s.latest_data->>'total_aprt_power')::float AS total_aprt
+        FROM sensors s
+        JOIN sensor_types st ON s.type_id = st.id
+        WHERE st.type = 'EnergyMeter'
+          AND s.latest_data->>'a_act_power'       IS NOT NULL
+          AND s.latest_data->>'b_act_power'       IS NOT NULL
+          AND s.latest_data->>'c_act_power'       IS NOT NULL
+          AND s.latest_data->>'total_act_power'   IS NOT NULL
+          AND s.latest_data->>'total_aprt_power'  IS NOT NULL
+        ORDER BY s.name, s.id, s.last_updated DESC
     """)
     rows = cursor.fetchall()
     cursor.close()
@@ -33,22 +39,95 @@ def get_all_energy_data():
         raise HTTPException(status_code=404, detail="No energy data found")
 
     results = {}
-    i =0
-    for row in rows:
-        sensor_id, name, timestamp, total_act_power, total_aprt_power = row
-        # Calculate power factor
-        if total_aprt_power and float(total_aprt_power) > 0:
-            power_factor = float(total_act_power) / float(total_aprt_power)
+    for sensor_id, name, timestamp, a_act, b_act, c_act, total_act, total_aprt in rows:
+        # Power factor
+        if total_aprt and total_aprt > 0:
+            pf = total_act / total_aprt
         else:
-            power_factor = 0
+            pf = 0.0
+
+        # Phase imbalance (% difference from average)
+        phases = [a_act, b_act, c_act]
+        avg = sum(phases) / 3.0 if sum(phases) > 0 else None
+        imbalance = {}
+        if avg and avg > 0:
+            imbalance = {
+                "A": round((a_act - avg) / avg * 100, 1),
+                "B": round((b_act - avg) / avg * 100, 1),
+                "C": round((c_act - avg) / avg * 100, 1),
+            }
 
         results[sensor_id] = {
-            "name": name,
             "id": sensor_id,
+            "name": name,
             "type": "EnergyMeter",
             "timestamp": timestamp.isoformat() if timestamp else None,
-            "total_active_power_kw": round(float(total_act_power), 3) if total_act_power else None,
-            "power_factor": round(power_factor, 3)
+            "total_active_power_kw": round(total_act, 3),
+            "power_factor": round(pf, 3),
+            "phase_imbalance_percent": imbalance
         }
 
     return results
+
+@router.get("/energy/notifications")
+def get_energy_notifications():
+    conn = connect_to_db()
+    if not conn:
+        raise HTTPException(500, "Database connection failed")
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT
+          s.id,
+          s.name,
+          (s.latest_data->>'a_act_power')::float    AS a_act,
+          (s.latest_data->>'b_act_power')::float    AS b_act,
+          (s.latest_data->>'c_act_power')::float    AS c_act,
+          (s.latest_data->>'total_act_power')::float AS total_act,
+          (s.latest_data->>'total_aprt_power')::float AS total_aprt
+        FROM sensors s
+        JOIN sensor_types st ON s.type_id = st.id
+        WHERE st.type = 'EnergyMeter'
+          AND s.latest_data->>'total_act_power'    IS NOT NULL
+          AND s.latest_data->>'total_aprt_power'   IS NOT NULL
+          AND s.latest_data->>'a_act_power'        IS NOT NULL
+          AND s.latest_data->>'b_act_power'        IS NOT NULL
+          AND s.latest_data->>'c_act_power'        IS NOT NULL
+        ORDER BY s.last_updated DESC
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    notes = []
+    for sensor_id, name, a_act, b_act, c_act, total_act, total_aprt in rows:
+        # 1) Low power factor
+        if total_aprt > 0:
+            pf = total_act / total_aprt
+            if pf < 0.8:
+                notes.append({
+                    "id":    f"energy-{sensor_id}-pf",
+                    "type":  "EnergyMeter",
+                    "metric": "PowerFactor",
+                    "severity": "Moderate",
+                    "message": f"Sensor {name} low power factor: {pf:.2f}"
+                })
+
+        # 2) Phase imbalance
+        phases = [a_act, b_act, c_act]
+        avg = sum(phases) / 3.0
+        for phase_label, val in zip(("A","B","C"), phases):
+            if avg > 0:
+                deviation = (val - avg) / avg
+                if abs(deviation) > 0.25:
+                    pct = deviation * 100
+                    notes.append({
+                        "id":     f"energy-{sensor_id}-imbalance-{phase_label}",
+                        "type":   "EnergyMeter",
+                        "metric": "PhaseImbalance",
+                        "severity": "Moderate",
+                        "message": (
+                            f"Sensor {name} phase {phase_label} "
+                            f"{'high' if pct>0 else 'low'} by {abs(pct):.0f}%"
+                        )
+                    })
+    return notes

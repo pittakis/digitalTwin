@@ -55,3 +55,37 @@ def get_sensor_data(sensor_name: str):
     
     columns = [col[0] for col in cursor.description]
     return dict(zip(columns, sensor_data))
+
+@router.get("/getSensorNotifications")
+def get_sensor_notifications():
+    notifications = []
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT ON (s.id)
+                s.id,
+                s.name,
+                s.last_updated   AS timestamp,
+                (s.latest_data->>'ValvePosition')::INT        AS valve_position,
+                (s.latest_data->>'TargetTemperature')::FLOAT  AS target_temperature,
+                (s.latest_data->>'Temperature')::FLOAT        AS temperature,
+                (s.latest_data->>'Battery')::INT              AS battery
+            FROM sensors AS s
+            JOIN sensor_types AS st 
+            ON s.type_id = st.id
+            WHERE st.type = 'Heater'
+            AND s.latest_data->>'ValvePosition'    IS NOT NULL
+            AND s.latest_data->>'TargetTemperature' IS NOT NULL
+            AND s.latest_data->>'Temperature'       IS NOT NULL
+            AND s.latest_data->>'Battery'           IS NOT NULL
+            ORDER BY 
+                s.id,
+                s.last_updated DESC;
+        """)
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        if not notifications:
+            return []
+        return notifications

@@ -2,52 +2,103 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function PMV() {
-  const [data, setData] = useState([]);
+// Utility: row background based on status
+const getRowColor = (status, showColors) => {
+  if (!showColors) return {};
+  switch (status) {
+    case "Comfortable":
+      return { backgroundColor: "#d4edda" };
+    case "Moderate":
+      return { backgroundColor: "#fff3cd" };
+    case "Uncomfortable":
+      return { backgroundColor: "#f8d7da" };
+    default:
+      return {};
+  }
+};
+
+// Utility: status text color
+const getStatusColor = (status) => {
+  switch (status) {
+    case "Comfortable":
+      return "#2e7d32"; // green
+    case "Moderate":
+      return "#b45f06"; // orange
+    case "Uncomfortable":
+      return "#a71d2a"; // red
+    default:
+      return "#000";
+  }
+};
+
+// Compute clothing insulation based on outdoor temperature (°C)
+const computeClo = (temp) => {
+  if (temp <= 10) return 1.0;
+  if (temp <= 20) return 0.7;
+  return 0.5;
+};
+
+export default function PMV() {
+  const [pmvData, setPmvData] = useState([]);
+  const [error, setError] = useState(null);
   const [showColors, setShowColors] = useState(false);
+  const [params, setParams] = useState(null);
   const navigate = useNavigate();
 
-  const fetchData = async () => {
-    try {
-      const res = await axios.get("http://localhost:7781/api/pmv");
-      const formatted = Object.entries(res.data).map(([sensor_id, values]) => ({
-        sensor_id,
-        ...values,
-      }));
-      setData(formatted);
-    } catch (err) {
-      console.error("Failed to fetch PMV data", err);
-    }
-  };
-
+  // Fetch weather once, compute PMV params
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+    const apiKey = import.meta.env.VITE_OWM_KEY;
+    const lat = 52.2297;
+    const lon = 21.0122;
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+
+    axios.get(weatherUrl)
+      .then(res => {
+        const w = res.data;
+        const met = 1.1;  // metabolic rate (met)
+        const clo = computeClo(w.main.temp);
+        const v_air = Math.min(Math.max(w.wind.speed || 0.1, 0), 0.3);
+        setParams({ met, clo, v_air });
+      })
+      .catch(() => setError("Failed to load weather data"));
   }, []);
 
-  const getRowColor = (status) => {
-    if (!showColors) return {};
-    if (status === "Comfortable") return { backgroundColor: "#d4edda" }; // green-ish
-    if (status === "Critical") return { backgroundColor: "#fff3cd" }; // yellow-ish
-    return { backgroundColor: "#f8d7da" }; // red-ish
-  };
+  // Fetch PMV once with computed params
+  useEffect(() => {
+    if (!params) return;
+    axios.get("http://localhost:7781/api/pmv", { params })
+      .then(res => setPmvData(res.data))
+      .catch(() => setError("Failed to fetch PMV data"));
+  }, [params]);
 
   return (
     <div style={styles.page}>
-      <button
-        onClick={() => navigate(-1)}
-        style={styles.backBtn}
-        aria-label="Go back"
-      >
+      <button onClick={() => navigate(-1)} style={styles.backBtn} aria-label="Go back">
         ⬅ Back
       </button>
 
       <h2 style={styles.title}>📋 PMV Sensor List</h2>
+      {error && <p style={styles.error}>{error}</p>}
 
-      <button onClick={() => setShowColors(!showColors)} style={styles.toggleBtn}>
-        {showColors ? "Hide Colors" : "Show Colors"}
-      </button>
+      {/* Controls with parameter badges */}
+      <div style={styles.controls}>
+        <button onClick={() => setShowColors(prev => !prev)} style={styles.toggleBtn}>
+          {showColors ? "Hide Colors" : "Show Colors"}
+        </button>
+        {params && (
+          <div style={styles.badges}>
+            <span style={styles.badge}>
+              Metabolic Rate: {params.met}
+            </span>
+            <span style={styles.badge}>
+              Clothing Insulation: {params.clo}
+            </span>
+            <span style={styles.badge}>
+              Air Velocity: {params.v_air} m/s
+            </span>
+          </div>
+        )}
+      </div>
 
       <table style={styles.table}>
         <thead>
@@ -63,20 +114,16 @@ function PMV() {
           </tr>
         </thead>
         <tbody>
-          {data.map((sensor, index) => (
-            <tr
-              key={sensor.sensor_id}
-              style={{
-                ...styles.row,
-                ...(index % 2 === 0 ? styles.rowEven : styles.rowOdd),
-                ...getRowColor(sensor.status),
-              }}
-            >
-              <td style={styles.td}>{sensor.sensor_id}</td>
-              <td style={styles.td}>{new Date(sensor.timestamp).toLocaleString()}</td>
+          {pmvData.map((sensor, idx) => (
+            <tr key={sensor.id} style={{
+                ...(idx % 2 === 0 ? styles.rowEven : styles.rowOdd),
+                ...getRowColor(sensor.status, showColors),
+              }}>
+              <td style={styles.td}>{sensor.id}</td>
+              <td style={styles.td}>{sensor.timestamp ? new Date(sensor.timestamp).toLocaleString() : "-"}</td>
               <td style={styles.td}>{sensor.name}</td>
-              <td style={styles.td}>{sensor.temperature}</td>
-              <td style={styles.td}>{sensor.humidity}</td>
+              <td style={styles.td}>{sensor.temperature ?? "-"}</td>
+              <td style={styles.td}>{sensor.humidity ?? "-"}</td>
               <td style={styles.td}>{sensor.pmv}</td>
               <td style={styles.td}>{sensor.ppd}</td>
               <td style={{ ...styles.td, fontWeight: "bold", color: getStatusColor(sensor.status) }}>
@@ -90,13 +137,6 @@ function PMV() {
   );
 }
 
-// Utility: status font color
-const getStatusColor = (status) => {
-  if (status === "Comfortable") return "#2e7d32"; // green
-  if (status === "Critical") return "#b45f06"; // orange
-  return "#a71d2a"; // red
-};
-
 const styles = {
   page: {
     padding: "2rem",
@@ -104,6 +144,7 @@ const styles = {
   },
   title: {
     marginBottom: "1rem",
+    color: "#2c3e50",
   },
   backBtn: {
     background: "none",
@@ -113,15 +154,31 @@ const styles = {
     marginBottom: "1rem",
     color: "#007BFF",
   },
+  controls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    marginBottom: "1rem",
+  },
   toggleBtn: {
     backgroundColor: "#007BFF",
     color: "#fff",
     padding: "0.5rem 1rem",
-    marginBottom: "1rem",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
     fontSize: "1rem",
+  },
+  badges: {
+    display: "flex",
+    gap: "0.5rem",
+  },
+  badge: {
+    backgroundColor: "#e0e0e0",
+    padding: "0.3rem 0.6rem",
+    borderRadius: "12px",
+    fontSize: "0.85rem",
+    color: "#333",
   },
   table: {
     width: "100%",
@@ -141,15 +198,14 @@ const styles = {
     borderBottom: "1px solid #eee",
     textAlign: "center",
   },
-  row: {
-    transition: "background-color 0.3s ease",
-  },
   rowEven: {
     backgroundColor: "#fafafa",
   },
   rowOdd: {
     backgroundColor: "#fff",
   },
+  error: {
+    color: "crimson",
+    marginBottom: "1rem",
+  },
 };
-
-export default PMV;
