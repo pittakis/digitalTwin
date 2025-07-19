@@ -243,7 +243,7 @@ export default function Dashboard() {
                   </button>
 
                   <h2 style={{ marginRight: "2rem" }}>
-                    Sensor {selectedSensor.name}
+                    {selectedSensor.name}
                   </h2>
 
                   {selectedSensor.messages?.map((m, i) => {
