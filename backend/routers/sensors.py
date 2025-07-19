@@ -111,7 +111,7 @@ def get_sensor_status():
         JOIN sensor_types AS st
           ON s.type_id = st.id
         WHERE s.building_id = 1
-        ORDER BY s.type_id, s.name;
+        ORDER BY s.type_id DESC, s.name;
     """)
     rows = cursor.fetchall()
     cursor.close()
@@ -129,11 +129,16 @@ def get_sensor_status():
         # 1) default status
         status = "green"
         messages = []
-
+        messages.append(f"Sensor ID: {sensor_id}")
+        messages.append(f"Sensor type: {sensor_type}")
+        messages.append(f"Location: {location}")
+        messages.append("DATA")
         # 2) check “last seen”
         if not last_updated or (now - last_updated) > timedelta(hours=2):
             status = "red"
-            messages.append("No data received in >2 h")
+            messages.append("No data received for more than 2 hours")
+        else:
+            messages.append("Sensor is Online")
 
         # 3) heater‐specific checks
         if sensor_type == "Heater":
@@ -143,18 +148,6 @@ def get_sensor_status():
                 if status != "red":
                     status = "yellow"
                 messages.append(f"Battery low: {batt}%")
-
-            # temperature deviation
-            tgt = ld.get("TargetTemperature")
-            tmp = ld.get("Temperature")
-            if tgt is not None and tmp is not None:
-                diff = abs(tmp - tgt)
-                if diff > 2:
-                    if status != "red":
-                        status = "yellow"
-                    messages.append(f"Temp deviates by {diff:.1f}°C")
-
-        # 4) (you can add AirQuality or EnergyMeter rules here...)
 
         allSensors .append({
             "id": sensor_id,

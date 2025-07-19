@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SensorStatusGrid from "../components/SensorStatusGrid";
+import { CircleX } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -12,9 +13,10 @@ export default function Dashboard() {
   const [sensorType, setSensorType] = useState("All");
   const [criteria, setCriteria] = useState("");
   const notificationsRef = useRef();
+  const [selectedSensor, setSelectedSensor] = useState(null);
 
   // initial pane height (notifications)
-  const initialHeight = window.innerHeight * 0.3;
+  const initialHeight = window.innerHeight * 0.07;
   const [paneHeight, setPaneHeight] = useState(initialHeight);
 
   // Auth guard
@@ -160,7 +162,7 @@ export default function Dashboard() {
     e.preventDefault();
     const startY = e.clientY;
     const startH = notificationsRef.current.getBoundingClientRect().height;
-    const minH = window.innerHeight * 0.3;
+    const minH = window.innerHeight * 0.07;
     const onMouseMove = e => {
       const delta = startY - e.clientY;
       const newH = startH + delta;
@@ -227,14 +229,41 @@ export default function Dashboard() {
       <div style={styles.main}>
         {/* Top pane: SensorStatusGrid */}
         <div style={{ ...styles.content, height: `calc(100vh - ${paneHeight}px)` }}>
-           <h1 style={{ margin: "1rem" }}>Sensor Status</h1>
+          <h1 style={{ margin: "0.75rem", textAlign: "center" }}>Sensor Status</h1>
           <div style={styles.statusContainer}>
-            <SensorStatusGrid
-              onSelect={sensor =>
-                alert(sensor.messages?.join("\n") || "All good!")
-              }
-            />
+            <SensorStatusGrid onSelect={setSelectedSensor} />
+            {selectedSensor && (
+              <div style={modalStyles.overlay}>
+                <div style={modalStyles.content}>
+                  <button
+                    style={styles.closeButton}
+                    onClick={() => setSelectedSensor(null)}
+                  >
+                    <CircleX />
+                  </button>
+
+                  <h2 style={{ marginRight: "2rem" }}>
+                    Sensor {selectedSensor.name}
+                  </h2>
+
+                  {selectedSensor.messages?.map((m, i) => {
+                    // if the message is literally "DATA", insert a blank line
+                    if (m === "DATA") {
+                      return <><br/><hr/></>;
+                    }
+                    // otherwise render the message
+                    return (
+                      <p key={i} style={{ margin: 0 }}>
+                        {m}
+                      </p>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
+
         </div>
 
         {/* Bottom pane: Notifications */}
@@ -330,6 +359,27 @@ export default function Dashboard() {
     </div>
   );
 }
+
+const modalStyles = {
+  overlay: {
+    position: "fixed",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  content: {
+    position: "relative",
+    background: "#fff",
+    paddingLeft: "1.5rem",
+    paddingRight: "1.5rem",
+    paddingTop: "0.5rem",
+    paddingBottom: "0.5rem",
+    borderRadius: "8px"
+  }
+};
 
 const styles = {
   layout: { display: "flex" },
@@ -457,5 +507,17 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
     fontSize: "1rem"
+  },
+  closeButton: {
+    position: "absolute",
+    top: "0.8rem",             // distance from top of modal
+    right: "0.5rem",           // distance from right of modal
+    padding: "0.2rem",
+    backgroundColor: "transparent",
+    color: "#f00",
+    border: "none",
+    borderRadius: "50%",
+    cursor: "pointer",
+    fontSize: "1.2rem"
   }
 };

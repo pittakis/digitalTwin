@@ -49,27 +49,29 @@ export default function SensorStatusGrid({ onSelect }) {
 const gridStyles = {
   container: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
     gap: "1rem",
-    marginBottom: "2rem",
+    marginBottom: "1rem",
   },
   card: {
-    width: "100%",                 // full width
+    width: "100%",
+    minWidth: "240px",         // full width
     display: "flex",
     alignItems: "center",
-    background: "lightgray",
-    padding: "0.75rem",
+    background: "rgba(214, 214, 214, 1)",
+    padding: "0.3rem",
     borderRadius: "8px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    boxShadow: "0 2px 8px rgba(148, 148, 148, 0.05)",
     cursor: "pointer",
   },
   led: {
-    width: "12px",
-    height: "12px",
+    width: "13px",
+    height: "13px",
     borderRadius: "50%",
     marginRight: "0.75rem",
   },
   info: {
+    fontSize: "15px",
     display: "flex",
     flexDirection: "column",
   },
