@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function SensorStatusGrid({ onSelect }) {
+export default function SensorStatusGrid({ onSelect, aiEnabled }) {
   const [statuses, setStatuses] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log("aiEnabled:", aiEnabled);
     axios
-      .get("http://localhost:7781/api/sensor/status")
+      .get("http://localhost:7781/api/sensor/status/" + aiEnabled)
       .then(({ data }) => setStatuses(data))
       .catch(err => setError("Failed to load sensor statuses"));
   }, []);

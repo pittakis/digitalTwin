@@ -91,13 +91,14 @@ def get_sensor_notifications():
             return []
         return notifications
     
-@router.get("/sensor/status")
-def get_sensor_status():
+@router.get("/sensor/status/{ai_enabled}")
+def get_sensor_status(ai_enabled: bool = False):
     """Return all sensors in building 1 with a health status and messages."""
     conn = connect_to_db()
     if not conn:
         raise HTTPException(500, "Database connection failed")
 
+    print("AI Enabled:", ai_enabled)  # Debugging line to check AI status
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
@@ -121,7 +122,7 @@ def get_sensor_status():
         return []
 
     allSensors  = []
-    now = datetime.utcnow()
+    now = datetime.now()
     for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
         # latest_data comes back as a Python dict
         ld = latest_data or {}
@@ -159,5 +160,7 @@ def get_sensor_status():
             "status": status,
             "messages": messages
         })
+        if ai_enabled:
+            messages.append("AI features enabled")
 
     return allSensors 

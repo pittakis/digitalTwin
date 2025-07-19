@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [criteria, setCriteria] = useState("");
   const notificationsRef = useRef();
   const [selectedSensor, setSelectedSensor] = useState(null);
+  const [aiEnabled, setAiEnabled] = useState(false); // AI features toggle
 
   // initial pane height (notifications)
   const initialHeight = window.innerHeight * 0.07;
@@ -206,6 +207,17 @@ export default function Dashboard() {
             🏗️ 3D Building View
           </button>
         </div>
+         <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label htmlFor="ai-toggle" style={{ color: "#fff", cursor: "pointer" }}>
+            🤖 AI Features
+          </label>
+          <input
+            id="ai-toggle"
+            type="checkbox"
+            checked={aiEnabled}
+            onChange={e => setAiEnabled(e.target.checked)}
+          />
+        </div>
         {next && (
           <div style={styles.weatherCardSidebar}>
             <p style={styles.city}>{city}</p>
@@ -231,7 +243,11 @@ export default function Dashboard() {
         <div style={{ ...styles.content, height: `calc(100vh - ${paneHeight}px)` }}>
           <h1 style={{ margin: "0.75rem", textAlign: "center" }}>Sensor Status</h1>
           <div style={styles.statusContainer}>
-            <SensorStatusGrid onSelect={setSelectedSensor} />
+           <SensorStatusGrid
+              key={String(aiEnabled)}
+              aiEnabled={aiEnabled}
+              onSelect={sensor => setSelectedSensor({ ...sensor, aiEnabled })}
+            />
             {selectedSensor && (
               <div style={modalStyles.overlay}>
                 <div style={modalStyles.content}>
@@ -249,7 +265,7 @@ export default function Dashboard() {
                   {selectedSensor.messages?.map((m, i) => {
                     // if the message is literally "DATA", insert a blank line
                     if (m === "DATA") {
-                      return <><br/><hr/></>;
+                      return <div key={i}><br/><hr/></div>;
                     }
                     // otherwise render the message
                     return (
