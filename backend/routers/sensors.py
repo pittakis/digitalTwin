@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db_utils import connect_to_db
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -89,3 +90,80 @@ def get_sensor_notifications():
         if not notifications:
             return []
         return notifications
+    
+@router.get("/sensor/status")
+def get_sensor_status():
+    """Return all sensors in building 1 with a health status and messages."""
+    conn = connect_to_db()
+    if not conn:
+        raise HTTPException(500, "Database connection failed")
+
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT
+            s.id,
+            s.name,
+            s.location,
+            s.last_updated,
+            s.latest_data,
+            st.type
+        FROM sensors AS s
+        JOIN sensor_types AS st
+          ON s.type_id = st.id
+        WHERE s.building_id = 1
+    """)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    if not rows:
+        return []
+
+    sensors = []
+    now = datetime.utcnow()
+    for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
+        # latest_data comes back as a Python dict
+        ld = latest_data or {}
+
+        # 1) default status
+        status = "green"
+        messages = []
+
+        # 2) check “last seen”
+        if not last_updated or (now - last_updated) > timedelta(hours=2):
+            status = "red"
+            messages.append("No data received in >2 h")
+
+        # 3) heater‐specific checks
+        if sensor_type == "Heater":
+            # battery
+            batt = ld.get("Battery")
+            if batt is not None and batt < 10:
+                if status != "red":
+                    status = "yellow"
+                messages.append(f"Battery low: {batt}%")
+
+            # temperature deviation
+            tgt = ld.get("TargetTemperature")
+            tmp = ld.get("Temperature")
+            if tgt is not None and tmp is not None:
+                diff = abs(tmp - tgt)
+                if diff > 2:
+                    if status != "red":
+                        status = "yellow"
+                    messages.append(f"Temp deviates by {diff:.1f}°C")
+
+        # 4) (you can add AirQuality or EnergyMeter rules here...)
+
+        sensors.append({
+            "id": sensor_id,
+            "name": name,
+            "location": location,
+            "type": sensor_type,
+            "last_seen": last_updated.isoformat() if last_updated else None,
+            "latest_data": ld,
+            "status": status,
+            "messages": messages
+        })
+
+    return sensors
