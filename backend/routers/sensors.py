@@ -111,6 +111,7 @@ def get_sensor_status():
         JOIN sensor_types AS st
           ON s.type_id = st.id
         WHERE s.building_id = 1
+        ORDER BY s.type_id, s.name;
     """)
     rows = cursor.fetchall()
     cursor.close()
@@ -119,7 +120,7 @@ def get_sensor_status():
     if not rows:
         return []
 
-    sensors = []
+    allSensors  = []
     now = datetime.utcnow()
     for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
         # latest_data comes back as a Python dict
@@ -155,7 +156,7 @@ def get_sensor_status():
 
         # 4) (you can add AirQuality or EnergyMeter rules here...)
 
-        sensors.append({
+        allSensors .append({
             "id": sensor_id,
             "name": name,
             "location": location,
@@ -166,4 +167,4 @@ def get_sensor_status():
             "messages": messages
         })
 
-    return sensors
+    return allSensors 
