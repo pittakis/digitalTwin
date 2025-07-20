@@ -219,7 +219,7 @@ export default function Dashboard() {
         </div>
         <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label htmlFor="ai-toggle" style={{ color: "#fff", cursor: "pointer" }}>
-            🤖 Enable AI Features
+            🤖 Enable AI Features for Anomaly Detection
           </label>
           <input
             id="ai-toggle"
@@ -255,20 +255,60 @@ export default function Dashboard() {
             <h1>Sensor Status</h1>
             <button style={styles.infoButton} onClick={() => setShowInstructions(prev => !prev)}><Info /></button>
           </div>
-          {/* INFO */}
-          {showInstructions && (
-            <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
-              <div style={styles.modal} onClick={e => e.stopPropagation()}>
-                <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
-                <h2>Indicators Info</h2>
-                <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}><CircleX /></button>
-                </div>
-                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "green" }} /> Sensor is Online</div>
-                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "yellow" }} /> Sensor has minor issues</div>
-                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "red" }} /> Sensor is Offline or has major issues</div>
-              </div>
-            </div>
-          )}
+{/* INFO */}
+{showInstructions && (
+  <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
+    <div style={styles.modal} onClick={e => e.stopPropagation()}>
+      <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+        <h2>Indicators Info</h2>
+        <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}>
+          <CircleX />
+        </button>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", marginTop: "1rem", alignItems: "center" }}>
+        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
+        Sensor is Online (normal)
+      </div>
+      <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
+        Sensor has minor issues
+      </div>
+      <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
+        Sensor is Offline or has major issues
+      </div>
+
+      {/* Explanation */}
+      <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
+        <strong>How anomalies are detected:</strong>
+        <p>
+          The "Enable AI Features for Anomaly Detection" checkbox must be checked.
+        </p>
+        <ul style={{ paddingLeft: "1.2rem", margin: "0.5rem 0" }}>
+          <li>
+            We use an <em>Isolation Forest</em> model to learn typical sensor behavior. Each reading’s “anomaly score”
+            is based on how quickly it can be “isolated” in a random decision tree.
+          </li>
+          <li>
+            Scores &gt; 0 are considered normal. Scores &lt; 0 trigger a minor‐issue warning (yellow).
+            Points classified as outliers by the forest are flagged red.
+          </li>
+          <li>
+            In addition, we apply domain rules: 
+            <ul style={{ paddingLeft: "1rem" }}>
+              <li><code>ValvePosition</code> and <code>Battery</code> must be between 0–100%</li>
+              <li>Any values more than 3 σ from the mean across all same‐type sensors are also highlighted</li>
+            </ul>
+          </li>
+        </ul>
+        The <em>anomalous_features</em> list shows which checks were triggered for each sensor.
+      </div>
+    </div>
+  </div>
+)}
+
           <div style={styles.statusContainer}>
             <SensorStatusGrid
               key={`${String(aiEnabled)}-${gridKey}`}
@@ -276,8 +316,8 @@ export default function Dashboard() {
               onSelect={sensor => setSelectedSensor({ ...sensor, aiEnabled })}
             />
             {selectedSensor && (
-              <div style={modalStyles.overlay}>
-                <div style={modalStyles.content}>
+              <div style={modalStyles.overlay} onClick={() => setSelectedSensor(null)}>
+                <div style={modalStyles.content} onClick={e => e.stopPropagation()}>
                   <button
                     style={styles.closeButton}
                     onClick={() => setSelectedSensor(null)}
