@@ -46,6 +46,7 @@ function Sensors() {
               <tr>
                 <th style={styles.th}>Data</th>
                 <th style={styles.th}>Name</th>
+                <th style={styles.th}>Sensor ID</th>
                 <th style={styles.th}>Location</th>
                 <th style={styles.th}>Last Updated</th>
               </tr>
@@ -70,6 +71,7 @@ function Sensors() {
                         </button>
                       </td>
                       <td style={styles.td}>{device.name}</td>
+                      <td style={styles.td}>{device.id}</td>
                       <td style={styles.td}>{device.location}</td>
                       <td style={styles.td}>
                         {device.last_updated
@@ -79,7 +81,7 @@ function Sensors() {
                     </tr>
                     {isExpanded && (
                       <tr>
-                        <td colSpan="4" style={styles.expandedRow}>
+                        <td colSpan="5" style={styles.expandedRow}>
                           {Object.keys(data).length ? (
                             <ul style={styles.dataList}>
                               {Object.entries(data).map(([key, val]) => (
