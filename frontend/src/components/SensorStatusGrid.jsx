@@ -6,7 +6,7 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("aiEnabled:", aiEnabled);
+    console.log("Fetching sensor statuses with AI enabled");
     axios
       .get("http://localhost:7781/api/sensor/status/" + aiEnabled)
       .then(({ data }) => setStatuses(data))

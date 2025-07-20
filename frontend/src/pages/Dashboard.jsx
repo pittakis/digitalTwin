@@ -14,11 +14,20 @@ export default function Dashboard() {
   const [criteria, setCriteria] = useState("");
   const notificationsRef = useRef();
   const [selectedSensor, setSelectedSensor] = useState(null);
-  const [aiEnabled, setAiEnabled] = useState(false); // AI features toggle
+  const [aiEnabled, setAiEnabled] = useState(false);
+   const [gridKey, setGridKey] = useState(0);
 
   // initial pane height (notifications)
   const initialHeight = window.innerHeight * 0.07;
   const [paneHeight, setPaneHeight] = useState(initialHeight);
+
+  // rebuild SensorStatusGrid every 2 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGridKey(prev => prev + 1);
+    }, 2 * 60 * 1000); // 2 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   // Auth guard
   useEffect(() => {
@@ -209,7 +218,7 @@ export default function Dashboard() {
         </div>
          <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label htmlFor="ai-toggle" style={{ color: "#fff", cursor: "pointer" }}>
-            🤖 AI Features
+            🤖 Enable AI Features
           </label>
           <input
             id="ai-toggle"
@@ -244,7 +253,7 @@ export default function Dashboard() {
           <h1 style={{ margin: "0.75rem", textAlign: "center" }}>Sensor Status</h1>
           <div style={styles.statusContainer}>
            <SensorStatusGrid
-              key={String(aiEnabled)}
+              key={`${String(aiEnabled)}-${gridKey}`}
               aiEnabled={aiEnabled}
               onSelect={sensor => setSelectedSensor({ ...sensor, aiEnabled })}
             />
