@@ -6,9 +6,12 @@ import Sensors from "./pages/Sensors";
 import EnergyOverview from "./pages/EnergyOverview";
 import HeaterOverview from "./pages/HeaterOverview";
 import Building3D from "./pages/BuildingViewer";
+import { ChatProvider } from "./components/chatbot";
+import ChatWidget from "./components/chatbot";
 
 function App() {
   return (
+    <ChatProvider>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -17,7 +20,10 @@ function App() {
         <Route path="/energy-overview" element={<EnergyOverview />} />
         <Route path="/heater-overview" element={<HeaterOverview />} />
         <Route path="/building-3d" element={<Building3D />} />
-      </Routes>  );
+      </Routes>
+      {location.pathname !== '/' && <ChatWidget />}
+    </ChatProvider>
+  );
 }
 
 export default App;
