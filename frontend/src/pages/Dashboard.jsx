@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SensorStatusGrid from "../components/SensorStatusGrid";
-import { CircleX } from 'lucide-react';
+import { CircleX, Info } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,7 +15,8 @@ export default function Dashboard() {
   const notificationsRef = useRef();
   const [selectedSensor, setSelectedSensor] = useState(null);
   const [aiEnabled, setAiEnabled] = useState(false);
-   const [gridKey, setGridKey] = useState(0);
+  const [gridKey, setGridKey] = useState(0);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   // initial pane height (notifications)
   const initialHeight = window.innerHeight * 0.07;
@@ -216,7 +217,7 @@ export default function Dashboard() {
             🏗️ 3D Building View
           </button>
         </div>
-         <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label htmlFor="ai-toggle" style={{ color: "#fff", cursor: "pointer" }}>
             🤖 Enable AI Features
           </label>
@@ -250,9 +251,26 @@ export default function Dashboard() {
       <div style={styles.main}>
         {/* Top pane: SensorStatusGrid */}
         <div style={{ ...styles.content, height: `calc(100vh - ${paneHeight}px)` }}>
-          <h1 style={{ margin: "0.75rem", textAlign: "center" }}>Sensor Status</h1>
+          <div style={{ display: "flex", margin: "auto" }}>
+            <h1>Sensor Status</h1>
+            <button style={styles.infoButton} onClick={() => setShowInstructions(prev => !prev)}><Info /></button>
+          </div>
+          {/* INFO */}
+          {showInstructions && (
+            <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
+              <div style={styles.modal} onClick={e => e.stopPropagation()}>
+                <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+                <h2>Indicators Info</h2>
+                <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}><CircleX /></button>
+                </div>
+                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "green" }} /> Sensor is Online</div>
+                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "yellow" }} /> Sensor has minor issues</div>
+                  <div style={{display: "flex"}}><div style={{ width: "13px", height: "13px", borderRadius: "50%", marginRight: "0.75rem", background: "red" }} /> Sensor is Offline or has major issues</div>
+              </div>
+            </div>
+          )}
           <div style={styles.statusContainer}>
-           <SensorStatusGrid
+            <SensorStatusGrid
               key={`${String(aiEnabled)}-${gridKey}`}
               aiEnabled={aiEnabled}
               onSelect={sensor => setSelectedSensor({ ...sensor, aiEnabled })}
@@ -274,7 +292,7 @@ export default function Dashboard() {
                   {selectedSensor.messages?.map((m, i) => {
                     // if the message is literally "DATA", insert a blank line
                     if (m === "DATA") {
-                      return <div key={i}><br/><hr/></div>;
+                      return <div key={i}><br /><hr /></div>;
                     }
                     // otherwise render the message
                     return (
@@ -544,5 +562,21 @@ const styles = {
     borderRadius: "50%",
     cursor: "pointer",
     fontSize: "1.2rem"
-  }
+  },
+  modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
+  modal: { background: '#fff', borderRadius: '10px', padding: '1rem', maxWidth: '400px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' },
+    closeStatusButton: {
+    position: "absolute",
+    top: "0.2rem",             // distance from top of modal
+    right: "0rem",           // distance from right of modal
+    padding: "0.2rem",
+    backgroundColor: "transparent",
+    color: "#f00",
+    border: "none",
+    borderRadius: "50%",
+    cursor: "pointer",
+    fontSize: "1.2rem"
+  },
+    infoButton: { padding: '0.9rem 0.2rem', backgroundColor: 'transparent', color: '#007bff', border: 'none', borderRadius: '100%', cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' },
+
 };

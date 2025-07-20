@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db_utils import connect_to_db
 from datetime import datetime, timedelta
+from ai.ai_features import detect_anomalies, getStatus
 
 router = APIRouter()
 
@@ -92,13 +93,35 @@ def get_sensor_notifications():
         return notifications
     
 @router.get("/sensor/status/{ai_enabled}")
-def get_sensor_status(ai_enabled: bool = False):
-    """Return all sensors in building 1 with a health status and messages."""
+async def get_sensor_status(ai_enabled: bool = False):
+    # If AI, fetch raw DB rows and call detect_anomalies(...)
+    anomalies = []
+    if ai_enabled:
+        conn = connect_to_db()
+        if not conn:
+            raise HTTPException(500, "Database connection failed")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * 
+              FROM sensors AS s
+              JOIN sensor_types AS st 
+                ON s.type_id = st.id
+             WHERE s.building_id = 1
+        """)
+        sensorData = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        if sensorData:
+            anomalies = await detect_anomalies(sensorData)
+
+    # Build a lookup: sensor_id -> anomaly dict
+    anomaly_map = { a["id"]: a for a in anomalies }
+
+    # Now do your normal fetch for allSensors
     conn = connect_to_db()
     if not conn:
         raise HTTPException(500, "Database connection failed")
-
-    print("AI Enabled:", ai_enabled)  # Debugging line to check AI status
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
@@ -118,39 +141,53 @@ def get_sensor_status(ai_enabled: bool = False):
     cursor.close()
     conn.close()
 
-    if not rows:
-        return []
-
-    allSensors  = []
     now = datetime.now()
-    for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
-        # latest_data comes back as a Python dict
-        ld = latest_data or {}
+    allSensors = []
 
-        # 1) default status
+    for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
+        ld = latest_data or {}
         status = "green"
-        messages = []
-        messages.append(f"Sensor ID: {sensor_id}")
-        messages.append(f"Sensor type: {sensor_type}")
-        messages.append(f"Location: {location}")
-        messages.append("DATA")
-        # 2) check “last seen”
+        messages = [
+            f"Sensor ID: {sensor_id}",
+            f"Sensor type: {sensor_type}",
+            f"Location: {location}",
+            "DATA"
+        ]
+
+        # last‐seen check
         if not last_updated or (now - last_updated) > timedelta(hours=2):
             status = "red"
             messages.append("No data received for more than 2 hours")
         else:
             messages.append("Sensor is Online")
 
-        # 3) heater‐specific checks
+        # heater checks...
         if sensor_type == "Heater":
-            # battery
             batt = ld.get("Battery")
-            if batt is not None and batt < 10:
-                if status != "red":
-                    status = "yellow"
+            if batt is not None and batt == 0 and status != "red":
+                status = "red"
+                messages.append(f"Battery at {batt}%")
+            if batt is not None and batt < 10 and status != "red":
+                status = "yellow"
                 messages.append(f"Battery low: {batt}%")
+            vp = ld.get("ValvePosition")
+            if vp is not None and vp < 10 and status != "red":
+                status = "yellow"
+                messages.append(f"Valve position is too low: {vp}%")
 
-        allSensors .append({
+        # __insert AI results here__
+        if ai_enabled:
+            messages.append("DATA")
+            a = anomaly_map.get(sensor_id)
+            if a:
+                # override status if you like
+                messages.append(f"Anomaly score: {a['score']:.3f}")
+                if a["status"] != "green":
+                    messages.append(f"Anomaly detected: {a['status']}")
+                if a["anomalous_features"]:
+                    messages.append("Anomalous features: " + ", ".join(a["anomalous_features"]))
+                status = getStatus(status, a["status"])
+        allSensors.append({
             "id": sensor_id,
             "name": name,
             "location": location,
@@ -160,7 +197,5 @@ def get_sensor_status(ai_enabled: bool = False):
             "status": status,
             "messages": messages
         })
-        if ai_enabled:
-            messages.append("AI features enabled")
 
-    return allSensors 
+    return allSensors
