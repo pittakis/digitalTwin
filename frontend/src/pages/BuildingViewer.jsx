@@ -78,6 +78,8 @@ const BuildingViewer = () => {
           handleSensorSelect(name);
         }
       }
+      console.log('Clicked on:', obj ? obj.name : 'none');
+      console.log('parent:', obj ? obj.parent.name : 'none');
     };
     const onWheel = e => {
       speedMultiplierRef.current = Math.max(0.01, Math.min(5, speedMultiplierRef.current - e.deltaY * 0.001));
@@ -98,9 +100,66 @@ const BuildingViewer = () => {
 
     // Load model
     new GLTFLoader().load(
-      '/fasada_glb.glb',
+      '/fasada_v2.glb',
       gltf => {
         scene.add(gltf.scene);
+        gltf.scene.traverse(child => {
+          if (!child.isMesh) return;
+
+          const name = child.name.toLowerCase();
+          const parentName = child.parent?.name?.toLowerCase() || '';
+
+          // Wall
+          if (name.includes('wall') || parentName.includes('wall')) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xf5e1c0, // light plaster/beige
+              roughness: 0.9,
+              metalness: 0.1
+            });
+
+            // Floor
+          } else if (name.includes('floor') || parentName.includes('floor')) {
+  const texture = new THREE.TextureLoader().load('textures/floor_texture.jpg');
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 4); // Adjust tiling (4x4 = repeated pattern)
+
+  child.material = new THREE.MeshStandardMaterial({
+    map: texture,
+    roughness: 0.7,
+    metalness: 0.1
+  });
+} else if (child.name.includes('IfcGeographicElementToposolidOgólne_—_1000_mm618174')) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x3a6e3a, // rich green
+              roughness: 1.0,
+              metalness: 0.0
+            });
+
+            // Doors
+          } else if (name.includes('door') || parentName.includes('door')) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x8b5a2b, // warm brown wood
+              roughness: 0.6,
+              metalness: 0.3
+            });
+
+            // Windows
+          } else if (name.includes('window') || parentName.includes('window')) {
+            child.material = new THREE.MeshPhysicalMaterial({
+              color: 0xa0a0a0,
+              roughness: 0.1,
+              metalness: 0.0,
+              transparent: true,
+              opacity: 0.4,
+              // transmission: 1.0,  // better glass realism (WebGL2+ only) takes too much performance
+              thickness: 0.2,
+              clearcoat: 1.0,
+              clearcoatRoughness: 0.1
+            });
+          }
+        });
+
         setLoading(false);
       },
       undefined,
@@ -213,8 +272,10 @@ const BuildingViewer = () => {
     <>
       {/* Loading overlay with spinner */}
       {loading && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-          background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20
+        }}>
           <svg width="60" height="60" viewBox="0 0 100 100" style={{ marginBottom: '1rem' }}>
             <circle cx="50" cy="50" r="32" strokeWidth="8" stroke="#fff" strokeDasharray="50.265" fill="none" strokeLinecap="round">
               <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1" />
@@ -227,11 +288,11 @@ const BuildingViewer = () => {
       {/* UI Bar */}
       <div style={styles.uiBar}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>Back</button>
-        <button onClick={() => { setShowSensorInfo(prev => { if (prev) { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current='none'; } return !prev; }); }} style={styles.toggleButton}>
+        <button onClick={() => { setShowSensorInfo(prev => { if (prev) { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; } return !prev; }); }} style={styles.toggleButton}>
           {showSensorInfo ? 'Hide Sensor Data' : 'Show Sensor Data'}
         </button>
         {showSensorInfo && (
-          <select onChange={e => { const val=e.target.value; if(val==='none'){ resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current='none'; } else { handleSensorSelect(val); } }} value={selectedName} style={styles.dropdown}>
+          <select onChange={e => { const val = e.target.value; if (val === 'none') { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; } else { handleSensorSelect(val); } }} value={selectedName} style={styles.dropdown}>
             <option value="none">None</option>
             {sensorNames.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
@@ -270,8 +331,10 @@ const BuildingViewer = () => {
 };
 
 const styles = {
-  uiBar: { position: 'absolute', top: '20px', left: '20px', display: 'flex', gap: '0.5rem', zIndex: 10,
-    background: 'rgba(255,255,255,0.9)', padding: '0.5rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' },
+  uiBar: {
+    position: 'absolute', top: '20px', left: '20px', display: 'flex', gap: '0.5rem', zIndex: 10,
+    background: 'rgba(255,255,255,0.9)', padding: '0.5rem', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+  },
   infoButton: { padding: '0.1rem 0.2rem', backgroundColor: 'transparent', color: '#007bff', border: 'none', borderRadius: '100%', cursor: 'pointer', fontSize: '1rem' },
   toggleButton: { padding: '0.4rem 0.8rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
   dropdown: { padding: '0.4rem', borderRadius: '5px', border: '1px solid #ccc' },
