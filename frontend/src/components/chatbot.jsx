@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { CircleX } from 'lucide-react';
+import axios from 'axios';
 
 // 1. Create ChatContext
 const ChatContext = createContext({
@@ -41,6 +42,7 @@ export default function ChatWidget() {
   const { open, messages, addMessage, clearMessages, toggleOpen } = useChat();
   const [input, setInput] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
   
   useEffect(() => {
@@ -91,16 +93,29 @@ export default function ChatWidget() {
     toggleOpen();
   };
 
-  const send = () => {
-    if (!input.trim()) return;
-    addMessage({ role: 'user', text: input.trim(), timestamp: Date.now() });
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const text = input.trim();
+    addMessage({ role: 'user', text, timestamp: Date.now() });
     setInput('');
-    // Here you would typically send the message to your AI backend
-    // For now, we just simulate a response
-    setTimeout(() => {
-      addMessage({ role: 'assistant', text: `You said: ${input.trim()}`, timestamp: Date.now() });
-    }, 500);
-    // AI processing to be added later
+    setLoading(true);
+
+    try {
+      const resp = await fetch(`http://localhost:7781/api/getAIResponse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      const reply = data.response || 'Error fetching reply';
+      addMessage({ role: 'assistant', text: reply, timestamp: Date.now() });
+    } catch (err) {
+      console.error(err);
+      addMessage({ role: 'assistant', text: 'Network error', timestamp: Date.now() });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Panel positioning relative to button

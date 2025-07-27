@@ -4,45 +4,152 @@ import axios from "axios";
 export default function SensorStatusGrid({ onSelect, aiEnabled }) {
   const [statuses, setStatuses] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedSensor, setSelectedSensor] = useState(null);
 
   useEffect(() => {
-    console.log("Fetching sensor statuses with AI enabled");
     axios
       .get("http://localhost:7781/api/sensor/status/" + aiEnabled)
       .then(({ data }) => setStatuses(data))
-      .catch(err => setError("Failed to load sensor statuses"));
-  }, []);
+      .catch(() => setError("Failed to load sensor statuses"));
+  }, [aiEnabled]);
 
-  // pick LED color
-  const getColor = (sensor) => {
-    return sensor.status
-  };
+  const groupedByLocation = statuses.reduce((acc, sensor) => {
+    const loc = sensor.location || "Unknown";
+    if (!acc[loc]) acc[loc] = [];
+    acc[loc].push(sensor);
+    return acc;
+  }, {});
+
+  const getColor = (sensor) => sensor.status;
+
+  const computeAverages = (sensors) => {
+  const sums = {};
+  const counts = {};
+  
+  sensors.forEach(sensor => {
+    const data = sensor.latest_data || {};
+    Object.entries(data).forEach(([key, value]) => {
+      if (typeof value === "number") {
+        sums[key] = (sums[key] || 0) + value;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    });
+  });
+
+  const averages = {};
+  Object.entries(sums).forEach(([key, sum]) => {
+    averages[key] = +(sum / counts[key]).toFixed(2);
+  });
+
+  return averages;
+};
+
 
   if (error) return <p style={{ color: "crimson" }}>{error}</p>;
 
   return (
     <div style={gridStyles.container}>
-      {statuses.map(sensor => {
-        const color = getColor(sensor);
-        return (
-          <div
-            key={sensor.id}
-            onClick={() => onSelect(sensor)}
-            style={gridStyles.card}
-          >
+      {/* === Locations View === */}
+      {!selectedLocation &&
+        Object.entries(groupedByLocation).map(([loc, sensors]) => {
+          let color = "green";
+          if (sensors.some(s => s.status === "red")) color = "red";
+          else if (sensors.some(s => s.status === "yellow")) color = "yellow";
+
+          return (
             <div
+              key={loc}
+              onClick={() => setSelectedLocation(loc)}
               style={{
-                ...gridStyles.led,
-                backgroundColor: color,
+                ...gridStyles.locationCard,
+                borderLeft: `6px solid ${color}`,
               }}
-            />
-            <div style={gridStyles.info}>
-              <strong>{sensor.name}</strong>
-              <small style={{ color: "#666" }}>{sensor.type}</small>
+            >
+              <strong>{loc}</strong>
+              <span style={{ fontSize: "0.85rem", color: "#555" }}>
+                {sensors.length} sensors
+              </span>
             </div>
+          );
+        })}
+
+      {/* === Sensors View === */}
+      {selectedLocation && (
+        <>
+          <button
+            onClick={() => setSelectedLocation(null)}
+            style={gridStyles.backButton}
+          >
+            ⬅ Back to Dashboard
+          </button>
+          {groupedByLocation[selectedLocation].map(sensor => (
+            <div
+              key={sensor.id}
+              onClick={() => {
+                onSelect(sensor);
+                setSelectedSensor(sensor);
+              }}
+              style={gridStyles.card}
+            >
+              <div
+                style={{
+                  ...gridStyles.led,
+                  backgroundColor: getColor(sensor),
+                }}
+              />
+              <div style={gridStyles.info}>
+                <strong>{sensor.name}</strong>
+                <small style={{ color: "#666" }}>{sensor.type}</small>
+              </div>
+            </div>
+          ))}
+          <div style={{ gridColumn: "1 / -1", marginTop: "1rem" }}>
+<h4 style={{color: '#3d004dff', fontSize: '1rem'}}>Average Sensor Readings</h4>
+<div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+  {Object.entries(
+    groupedByLocation[selectedLocation]
+      .reduce((acc, sensor) => {
+        const type = sensor.type || "Unknown";
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(sensor);
+        return acc;
+      }, {})
+  ).map(([type, sensorsOfType]) => {
+    const averages = computeAverages(sensorsOfType);
+    return (
+      <div
+        key={type}
+        style={{
+          background: "#f9f9f9",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          padding: "0.75rem 1rem",
+          minWidth: "200px",
+          flex: "1",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        }}
+      >
+        <strong style={{ display: "block", marginBottom: "0.5rem" }}>
+          {type}
+        </strong>
+        <div style={{ fontSize: "0.85rem", color: "#333" }}>
+          {Object.entries(averages).map(([k, v]) => (
+            <div key={k} style={{ marginBottom: "0.25rem" }}>
+              Average {k}: <span style={{ fontWeight: "bold" }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+
+
           </div>
-        );
-      })}
+        </>
+      )}
     </div>
   );
 }
@@ -54,9 +161,31 @@ const gridStyles = {
     gap: "1rem",
     marginBottom: "1rem",
   },
+  locationCard: {
+    background: "#f5f5f5",
+    padding: "1rem",
+    borderRadius: "10px",
+    cursor: "pointer",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    borderLeft: "6px solid gray", // default (overridden inline)
+  },
+  backButton: {
+    gridColumn: "1 / -1",
+    padding: "0.5rem 1rem",
+    backgroundColor: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginBottom: "1rem"
+  },
   card: {
     width: "100%",
-    minWidth: "240px",         // full width
+    minWidth: "240px",
     display: "flex",
     alignItems: "center",
     background: "rgba(214, 214, 214, 1)",

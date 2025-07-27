@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SensorStatusGrid from "../components/SensorStatusGrid";
 import { CircleX, Info } from 'lucide-react';
+import SensorChart from "../components/SensorCharts";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function Dashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       setGridKey(prev => prev + 1);
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 10 * 60 * 1000); // 10 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -341,6 +342,8 @@ export default function Dashboard() {
                       </p>
                     );
                   })}
+                  <br /><hr />
+                  <SensorChart sensorId={selectedSensor.id} />
                 </div>
               </div>
             )}
@@ -460,7 +463,9 @@ const modalStyles = {
     paddingRight: "1.5rem",
     paddingTop: "0.5rem",
     paddingBottom: "0.5rem",
-    borderRadius: "8px"
+    borderRadius: "0",
+    overflowY: "auto",
+    maxHeight: "80vh"
   }
 };
 
@@ -498,13 +503,13 @@ const styles = {
     borderRadius: "12px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
     textAlign: "center",
-    width: "240px",
-    height: "260px"
+    width: "auto",
+    height: "auto"
   },
   city: { fontSize: "1.5rem", fontWeight: "bold", color: "#2c3e50" },
   forecastTime: { fontSize: "0.75rem", color: "#555" },
-  icon: { width: "90px", height: "90px", margin: 0 },
-  temp: { fontSize: "1.5rem", margin: 0, color: "#555" },
+  icon: { width: "70px", height: "70px", margin: 0 },
+  temp: { fontSize: "1rem", margin: 0, color: "#555" },
   desc: { textTransform: "capitalize", color: "#555", margin: "0.25rem 0" },
   details: { fontSize: "0.75rem", color: "#777" },
   main: {
@@ -529,6 +534,7 @@ const styles = {
   notificationsContainer: {
     position: "fixed",
     bottom: 0,
+    minHeight: "60px",
     left: "380px",
     right: 0,
     background: "#f9f9f9",
@@ -604,7 +610,7 @@ const styles = {
     fontSize: "1.2rem"
   },
   modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
-  modal: { background: '#fff', borderRadius: '10px', padding: '1rem', maxWidth: '400px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' },
+  modal: { background: '#fff', borderRadius: '10px', padding: '1rem', maxWidth: '400px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', overflowY: 'auto', maxHeight: '80vh', position: 'relative' },
     closeStatusButton: {
     position: "absolute",
     top: "0.2rem",             // distance from top of modal

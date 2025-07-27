@@ -48,6 +48,24 @@ def add_sensor_data_to_db(equipment_id, timestamp, values):
                 last_updated = %s
             WHERE id = %s
         """, (json.dumps(values), timestamp, equipment_id))
+
+        # Insert into sensor_data history table
+        cursor.execute("""
+            INSERT INTO sensor_data (sensor_id, data, timestamp)
+            VALUES (%s, %s, %s)
+        """, (equipment_id, json.dumps(values), timestamp))
+
+        # Keep only the most recent 20 entries per sensor
+        cursor.execute("""
+            DELETE FROM sensor_data
+            WHERE id IN (
+                SELECT id FROM sensor_data
+                WHERE sensor_id = %s
+                ORDER BY timestamp ASC
+                OFFSET 20
+            )
+        """, (equipment_id,))
+
         conn.commit()
         # print("Sensor JSON data inserted successfully.")
     except Exception as e:

@@ -199,3 +199,26 @@ async def get_sensor_status(ai_enabled: bool = False):
         })
 
     return allSensors
+
+@router.get("/sensor/history/{sensor_id}")
+async def get_sensor_history(sensor_id: str):
+    conn = connect_to_db()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+    
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT data, timestamp 
+        FROM sensor_data 
+        WHERE sensor_id = %s 
+        ORDER BY timestamp ASC
+    """, (sensor_id,))
+    
+    history = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    if not history:
+        raise HTTPException(status_code=404, detail=f"No history found for sensor ID '{sensor_id}'")
+    
+    return [{"data": row[0], "timestamp": row[1].isoformat()} for row in history]

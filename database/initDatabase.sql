@@ -7,7 +7,8 @@
 -- building table
 CREATE TABLE IF NOT EXISTS buildings (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    locations JSON DEFAULT '{}'::JSON
 );
 
 -- user table
@@ -34,6 +35,14 @@ CREATE TABLE IF NOT EXISTS sensors (
     building_id INTEGER NOT NULL REFERENCES buildings(id),
     type_id INTEGER NOT NULL REFERENCES sensor_types(id)
 );
+
+CREATE TABLE IF NOT EXISTS sensor_data (
+    id SERIAL PRIMARY KEY,
+    sensor_id VARCHAR(255) REFERENCES sensors(id) ON DELETE CASCADE,
+    data JSON NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- fill database with initial data
 -- buildings

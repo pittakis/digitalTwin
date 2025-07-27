@@ -9,6 +9,7 @@ from routers.energy import router as energy_router
 from routers.heater import router as heater_router
 from routers.model3d import router as model3d_router
 from routers.upload import router as upload_router
+from routers.chat import router as getAIResponse
 
 #from pmv_realtime import run_mqtt_listener as run_pmv_listener, latest_pmv_data
 from sensors_realtime import run_sensor_listener
@@ -32,6 +33,7 @@ app.include_router(energy_router, prefix="/api")
 app.include_router(heater_router, prefix="/api")
 app.include_router(model3d_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
+app.include_router(getAIResponse, prefix="/api")
 
 # Start MQTT listener
 #run_pmv_listener()
