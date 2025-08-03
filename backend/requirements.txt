@@ -7,3 +7,6 @@ python-dotenv
 psycopg2-binary
 pythermalcomfort
 paho-mqtt
+scikit-learn
+numpy
+openai
