@@ -3,10 +3,11 @@ import axios from 'axios';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Info } from 'lucide-react';
 
 const BuildingViewer = () => {
+  let params = useParams()
   const mountRef = useRef(null);
   const [sensorNames, setSensorNames] = useState([]);
   const [showSensorInfo, setShowSensorInfo] = useState(false);
@@ -99,8 +100,10 @@ const BuildingViewer = () => {
     scene.add(dirLight);
 
     // Load model
+    console.log('Loading model for floor:', params.floor);
+    let path = "/floor_" + params.floor + ".glb";
     new GLTFLoader().load(
-      '/fasada_v2.glb',
+      path,
       gltf => {
         scene.add(gltf.scene);
         gltf.scene.traverse(child => {
@@ -119,16 +122,11 @@ const BuildingViewer = () => {
 
             // Floor
           } else if (name.includes('floor') || parentName.includes('floor')) {
-  const texture = new THREE.TextureLoader().load('textures/floor_texture.jpg');
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(4, 4); // Adjust tiling (4x4 = repeated pattern)
-
-  child.material = new THREE.MeshStandardMaterial({
-    map: texture,
-    roughness: 0.7,
-    metalness: 0.1
-  });
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x00FFCC99, // warm brown wood
+              roughness: 0.6,
+              metalness: 0.3
+            });
 } else if (child.name.includes('IfcGeographicElementToposolidOgólne_—_1000_mm618174')) {
             child.material = new THREE.MeshStandardMaterial({
               color: 0x3a6e3a, // rich green

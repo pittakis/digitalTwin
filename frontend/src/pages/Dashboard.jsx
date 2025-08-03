@@ -212,7 +212,7 @@ export default function Dashboard() {
             🌡️ PMV Calculator
           </button>
           <button
-            onClick={() => navigate("/building-3d")}
+            onClick={() => navigate("/floorplan")}
             style={styles.button}
           >
             🏗️ 3D Building View
