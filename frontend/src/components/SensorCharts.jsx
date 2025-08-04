@@ -13,6 +13,17 @@ import axios from "axios";
 
 function SensorChart({ sensorId }) {
   const [data, setData] = useState([]);
+  const [keys, setKeys] = useState([]);
+  const [slot1Key, setSlot1Key] = useState("");
+  const [slot2Key, setSlot2Key] = useState("");
+
+  const styles = {
+    dropdown: {
+      padding: '0.4rem',
+      borderRadius: '5px',
+      border: '1px solid #ccc'
+    }
+  };
 
   useEffect(() => {
     if (!sensorId) return;
@@ -23,37 +34,73 @@ function SensorChart({ sensorId }) {
           ...entry.data,
         }));
         setData(processed);
+
+        const dataKeys = Object.keys(processed[0] || {}).filter(k => k !== "timestamp");
+        setKeys(dataKeys);
+        if (dataKeys.length > 0) {
+          setSlot1Key(dataKeys[0]);
+          setSlot2Key(dataKeys.length > 1 ? dataKeys[1] : dataKeys[0]);
+        }
       })
       .catch(err => console.error("Failed to fetch history:", err));
   }, [sensorId]);
 
   if (!data.length) return <p>No historical data available.</p>;
 
-  const keys = Object.keys(data[0]).filter(k => k !== "timestamp");
+  const renderChart = (selectedKey) => (
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="timestamp" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Line
+          type="monotone"
+          dataKey={selectedKey}
+          stroke="#10a01cff"
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div>
       <h3>Data Charts</h3>
-      {keys.map((key) => (
-        <div key={key}>
-          <h4 style={{ marginBottom: "0.5rem" }}>{key.toUpperCase()}</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey={key}
-                stroke="#10a01cff"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+        
+        {/* Slot 1 */}
+        <div style={{ flex: 1, minWidth: "300px" }}>
+          <label>
+            Select Metric for Slot 1:{" "}
+            <select
+              style={styles.dropdown}
+              value={slot1Key}
+              onChange={(e) => setSlot1Key(e.target.value)}
+            >
+              {keys.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+          </label>
+          {slot1Key && renderChart(slot1Key)}
         </div>
-      ))}
+
+        {/* Slot 2 */}
+        <div style={{ flex: 1, minWidth: "300px" }}>
+          <label>
+            Select Metric for Slot 2:{" "}
+            <select
+              style={styles.dropdown}
+              value={slot2Key}
+              onChange={(e) => setSlot2Key(e.target.value)}
+            >
+              {keys.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+          </label>
+          {slot2Key && renderChart(slot2Key)}
+        </div>
+
+      </div>
     </div>
   );
 }
