@@ -8,5 +8,3 @@ dtvenv/
 # Frontend dependencies
 frontend/node_modules/
 frontend/public/*.glb
-frontend/package-lock.json
-frontend/package.json
