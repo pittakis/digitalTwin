@@ -24,26 +24,26 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
   const getColor = (sensor) => sensor.status;
 
   const computeAverages = (sensors) => {
-  const sums = {};
-  const counts = {};
-  
-  sensors.forEach(sensor => {
-    const data = sensor.latest_data || {};
-    Object.entries(data).forEach(([key, value]) => {
-      if (typeof value === "number") {
-        sums[key] = (sums[key] || 0) + value;
-        counts[key] = (counts[key] || 0) + 1;
-      }
+    const sums = {};
+    const counts = {};
+
+    sensors.forEach(sensor => {
+      const data = sensor.latest_data || {};
+      Object.entries(data).forEach(([key, value]) => {
+        if (typeof value === "number") {
+          sums[key] = (sums[key] || 0) + value;
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
     });
-  });
 
-  const averages = {};
-  Object.entries(sums).forEach(([key, sum]) => {
-    averages[key] = +(sum / counts[key]).toFixed(2);
-  });
+    const averages = {};
+    Object.entries(sums).forEach(([key, sum]) => {
+      averages[key] = +(sum / counts[key]).toFixed(2);
+    });
 
-  return averages;
-};
+    return averages;
+  };
 
 
   if (error) return <p style={{ color: "crimson" }}>{error}</p>;
@@ -77,12 +77,26 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
       {/* === Sensors View === */}
       {selectedLocation && (
         <>
-          <button
-            onClick={() => setSelectedLocation(null)}
-            style={gridStyles.backButton}
-          >
-            ⬅ Back to Dashboard
-          </button>
+          <hr
+            style={{
+              gridColumn: "1 / -1",
+              width: "100%",
+              border: "none",
+              borderTop: "1px solid #e5e7eb",
+              margin: "0 0 1rem 0",
+            }}
+          />
+          <div style={{ gridColumn: "1 / -1", marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", }}>
+            <button
+              onClick={() => setSelectedLocation(null)}
+              style={{ ...gridStyles.backBtn, position: "absolute", left: 0 }}
+              aria-label="Go back"
+            >
+              ⬅ Back
+            </button>
+
+            <h1 style={{ fontSize: 28, margin: 0 }}>{selectedLocation}</h1>
+          </div>
           {groupedByLocation[selectedLocation].map(sensor => (
             <div
               key={sensor.id}
@@ -105,45 +119,45 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
             </div>
           ))}
           <div style={{ gridColumn: "1 / -1", marginTop: "1rem" }}>
-<h4 style={{color: '#3d004dff', fontSize: '1rem'}}>Average Sensor Readings</h4>
-<div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-  {Object.entries(
-    groupedByLocation[selectedLocation]
-      .reduce((acc, sensor) => {
-        const type = sensor.type || "Unknown";
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(sensor);
-        return acc;
-      }, {})
-  ).map(([type, sensorsOfType]) => {
-    const averages = computeAverages(sensorsOfType);
-    return (
-      <div
-        key={type}
-        style={{
-          background: "#f9f9f9",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "0.75rem 1rem",
-          minWidth: "200px",
-          flex: "1",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        }}
-      >
-        <strong style={{ display: "block", marginBottom: "0.5rem" }}>
-          {type}
-        </strong>
-        <div style={{ fontSize: "0.85rem", color: "#333" }}>
-          {Object.entries(averages).map(([k, v]) => (
-            <div key={k} style={{ marginBottom: "0.25rem" }}>
-              Average {k}: <span style={{ fontWeight: "bold" }}>{v}</span>
+            <h4 style={{ color: '#3d004dff', fontSize: '1rem' }}>Average Sensor Readings</h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              {Object.entries(
+                groupedByLocation[selectedLocation]
+                  .reduce((acc, sensor) => {
+                    const type = sensor.type || "Unknown";
+                    if (!acc[type]) acc[type] = [];
+                    acc[type].push(sensor);
+                    return acc;
+                  }, {})
+              ).map(([type, sensorsOfType]) => {
+                const averages = computeAverages(sensorsOfType);
+                return (
+                  <div
+                    key={type}
+                    style={{
+                      background: "#f9f9f9",
+                      border: "1px solid #ddd",
+                      borderRadius: "8px",
+                      padding: "0.75rem 1rem",
+                      minWidth: "200px",
+                      flex: "1",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <strong style={{ display: "block", marginBottom: "0.5rem" }}>
+                      {type}
+                    </strong>
+                    <div style={{ fontSize: "0.85rem", color: "#333" }}>
+                      {Object.entries(averages).map(([k, v]) => (
+                        <div key={k} style={{ marginBottom: "0.25rem" }}>
+                          Average {k}: <span style={{ fontWeight: "bold" }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  })}
-</div>
 
 
 
@@ -173,15 +187,13 @@ const gridStyles = {
     justifyContent: "center",
     borderLeft: "6px solid gray", // default (overridden inline)
   },
-  backButton: {
-    gridColumn: "1 / -1",
-    padding: "0.5rem 1rem",
-    backgroundColor: "#007bff",
-    color: "white",
+  backBtn: {
+    background: "none",
     border: "none",
-    borderRadius: "5px",
     cursor: "pointer",
-    marginBottom: "1rem"
+    fontSize: "1rem",
+    marginBottom: "1rem",
+    color: "#007BFF",
   },
   card: {
     width: "100%",
