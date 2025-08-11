@@ -30,7 +30,7 @@ async def detect_anomalies(
         # Collect numeric feature keys
         feature_keys = set()
         for row in rows:
-            latest_data = row[3] or {}
+            latest_data = row[4] or {}
             for k, v in latest_data.items():
                 if isinstance(v, (int, float)):
                     feature_keys.add(k)
@@ -42,7 +42,7 @@ async def detect_anomalies(
         raw_vals = []
         for row in rows:
             sensor_id = row[0]
-            latest_data = row[3] or {}
+            latest_data = row[4] or {}
             vals = [latest_data.get(k, 0) for k in feature_keys]
             X.append(vals)
             ids.append(sensor_id)

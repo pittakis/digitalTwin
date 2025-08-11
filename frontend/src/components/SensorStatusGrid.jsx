@@ -45,34 +45,102 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
     return averages;
   };
 
+  // Helpers for floor grouping on the locations view
+  const floorLabel = (f) => (f === 2 ? "Kindergarten" : f === 0 ? "Floor 0" : f === 1 ? "Floor 1" : `Floor ${f}`);
+  const floorOrder = [0, 1, 2];
+
 
   if (error) return <p style={{ color: "crimson" }}>{error}</p>;
 
   return (
     <div style={gridStyles.container}>
       {/* === Locations View === */}
-      {!selectedLocation &&
-        Object.entries(groupedByLocation).map(([loc, sensors]) => {
-          let color = "green";
-          if (sensors.some(s => s.status === "red")) color = "red";
-          else if (sensors.some(s => s.status === "yellow")) color = "yellow";
-
-          return (
-            <div
-              key={loc}
-              onClick={() => setSelectedLocation(loc)}
-              style={{
-                ...gridStyles.locationCard,
-                borderLeft: `6px solid ${color}`,
-              }}
-            >
-              <strong>{loc}</strong>
-              <span style={{ fontSize: "0.85rem", color: "#555" }}>
-                {sensors.length} sensors
-              </span>
-            </div>
+      {/* === Locations View (grouped by floor) === */}
+      {!selectedLocation && (() => {
+        // Build: floor -> [{ loc, sensors }]
+        const locsByFloor = {};
+        Object.entries(groupedByLocation).forEach(([loc, sensors]) => {
+          // Which floors exist for this location?
+          const floorsHere = Array.from(
+            new Set(
+              sensors.map(s => Number.isInteger(s.floor) ? s.floor : 0)
+            )
           );
-        })}
+          floorsHere.forEach(f => {
+            (locsByFloor[f] ||= []).push({ loc, sensors });
+          });
+        });
+
+return floorOrder.map((f) => {
+  const groups = locsByFloor[f] || [];
+  if (!groups.length) return null;
+
+  return (
+    <div key={`floor-group-${f}`} style={{ gridColumn: "1 / -1" }}>
+      {/* Box wrapper (like your screenshot) */}
+      <div
+        style={{
+          position: "relative",
+          border: "1px solid #ccc",
+          borderRadius: "10px",
+          padding: "0.75rem 1rem 1rem",
+          background: "#fff",
+        }}
+      >
+        {/* Legend-style label sitting on the border */}
+        <span
+          style={{
+            position: "absolute",
+            top: -12,
+            left: 12,
+            padding: "0 8px",
+            background: "#fff",
+            color: "#555",
+            fontStyle: "italic",
+            fontSize: "0.95rem",
+          }}
+        >
+          {floorLabel(f)}
+        </span>
+
+        {/* Inner grid so cards for this floor don't mix with other floors */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap: "1rem",
+            marginTop: "0.25rem",
+          }}
+        >
+          {groups.map(({ loc, sensors }) => {
+            let color = "green";
+            if (sensors.some((s) => s.status === "red")) color = "red";
+            else if (sensors.some((s) => s.status === "yellow")) color = "yellow";
+
+            return (
+              <div
+                key={`${f}-${loc}`}
+                onClick={() => setSelectedLocation(loc)}
+                style={{
+                  ...gridStyles.locationCard,
+                  borderLeft: `6px solid ${color}`,
+                }}
+              >
+                <strong>{loc}</strong>
+                <span style={{ fontSize: "0.85rem", color: "#555" }}>
+                  {sensors.length} sensors
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+      })()}
+
 
       {/* === Sensors View === */}
       {selectedLocation && (

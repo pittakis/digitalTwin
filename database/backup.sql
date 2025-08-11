@@ -133,6 +133,7 @@ CREATE TABLE public.sensors (
     id character varying(255) NOT NULL,
     name character varying(100) NOT NULL,
     location character varying(255),
+    floor integer DEFAULT 0 NOT NULL,
     latest_data json DEFAULT '{}'::json,
     last_updated timestamp without time zone,
     building_id integer NOT NULL,
@@ -865,62 +866,62 @@ COPY public.sensor_types (id, type) FROM stdin;
 -- Data for Name: sensors; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-COPY public.sensors (id, name, location, latest_data, last_updated, building_id, type_id) FROM stdin;
-70:ee:50:83:2f:6c	AirQuality_DirectorOffice	Director Office	{"temperature": 23.9, "humidity": 59, "Pressure": 1007.6, "AbsolutePressure": 1002, "Noise": 41, "CO2": 826}	2025-08-01 10:55:29	1	1
-70:ee:50:83:4e:60	AirQuality_ClassRoom2	Classroom 2	{"temperature": 26.5, "humidity": 51, "Pressure": 1007.8, "AbsolutePressure": 1002.2, "Noise": 32, "CO2": 519}	2025-08-01 10:51:55	1	1
-70:ee:50:83:2e:4e	AirQuality_ViceDirectorOffice	Vice Director Office	{}	\N	1	1
-shellytrv-8cf681b9c952	Heater_Corridor_4	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.3, "Battery": 99}	2025-08-01 11:00:07.055	1	2
-shellytrv-8cf681a52e44	Heater_ClassRoom5_3	Classroom 5	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 20.4, "Battery": 99}	2025-07-27 17:40:08.534	1	2
-shellytrv-8cf681b70b5e	Heater_Corridor_3	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.2, "Battery": 45}	2025-08-01 11:00:08.713	1	2
-shellytrv-bc33ac022f76	Heater_ClassRoom2_1	Classroom 2	{}	\N	1	2
-shellytrv-b4e3f9d9e3d7	Heater_Corridor_5	Corridor	{"ValvePosition": 100, "TargetTemperature": 21, "Temperature": 20.2, "Battery": 60}	2025-08-01 11:00:02.321	1	2
-shellytrv-588e816162de	Heater_ClassRoom3_1	Classroom 3	{}	\N	1	2
-shellytrv-bc33ac022fa8	Heater_ClassRoom1_3	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.6, "Battery": 99}	2025-07-27 17:40:02.839	1	2
-shellytrv-588e81a63315	Heater_ClassRoom4_2	Classroom 4	{}	\N	1	2
-shellytrv-588e81a41b47	Heater_ClassRoom5_1	Classroom 5	{}	\N	1	2
-shellytrv-8cf681be1032	Heater_ClassRoom5_2	Classroom 5	{}	\N	1	2
-shellytrv-8cf681b70b5a	Heater_ClassRoom5_4	Classroom 5	{}	\N	1	2
-shellytrv-8cf681cd1598	Heater_StaffToilet	Staff toilet	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 99}	2025-08-01 11:20:12.271	1	2
-shellytrv-b4e3f9e30ab3	Heater_Corridor_6	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.7, "Battery": 99}	2025-08-01 11:00:03.832	1	2
-shellytrv-8cf681a52e2e	Heater_Kitchen_1	Kitchen	{}	\N	1	2
-shellytrv-8cf681e9a780	Heater_Corridor_8	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 99}	2025-08-01 11:20:14.037	1	2
-shellytrv-8cf681d9a228	Heater_Corridor_7	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.9, "Battery": 38}	2025-08-01 11:00:03.653	1	2
-shellytrv-8cf681a51bae	Heater_OfficeRoom1	Office room 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.4, "Battery": 68}	2025-08-01 11:20:33.448	1	2
-shellytrv-b4e3f9d9bc83	Heater_OfficeRoom2	Office room 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.3, "Battery": 99}	2025-08-01 11:20:26.88	1	2
-shellytrv-8cf681b9c9ae	Heater_Kitchen_3	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 68}	2025-07-27 18:00:24.019	1	2
-shellytrv-bc33ac022fb6	Heater_ClassRoom2_2	Classroom 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.9, "Battery": 99}	2025-07-27 17:40:05.643	1	2
-shellytrv-588e81a41b41	Heater_ClassRoom1_1	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 20, "Temperature": 23.2, "Battery": 53}	2025-07-27 17:40:05.322	1	2
-70:ee:50:83:4d:e8	AirQuality_OfficeFirstFloor	Office 1st Floor	{"temperature": 24.1, "humidity": 58, "Pressure": 1004.4, "AbsolutePressure": 1001.5, "Noise": 67, "CO2": 506}	2025-08-01 10:50:50	1	1
-shellytrv-588e81616fe8	Heater_ClassRoom3_3	Classroom 3	{"ValvePosition": 100, "TargetTemperature": 5, "Temperature": 22, "Battery": 70}	2025-07-06 17:40:11.503	1	2
-shellytrv-8cf681be1608	Heater_ViceDirectorOffice	Vice Director Office	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 99}	2025-08-01 11:00:16.614	1	2
-70:ee:50:83:2f:44	AirQuality_ClassRoom3	Classroom 3	{"temperature": 25.4, "humidity": 53, "Pressure": 1007.5, "AbsolutePressure": 1001.9, "Noise": 32, "CO2": 515}	2025-08-01 10:56:06	1	1
-shellytrv-842e14fe1d64	Heater_ClassRoom4_3	Classroom 4	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.3, "Battery": 24}	2025-08-01 11:20:07.448	1	2
-shellytrv-842e14ffcb48	Heater_Corridor_2	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 99}	2025-08-01 11:00:05.313	1	2
-shellytrv-b4e3f9d6249d	Heater_Corridor_9	Corridor	{"ValvePosition": 100, "TargetTemperature": 23, "Temperature": 20.6, "Battery": 99}	2025-08-01 11:00:06.373	1	2
-shellytrv-842e14ffaf1c	Heater_OfficeRoom3	Office room 3	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 61}	2025-07-27 17:20:20.539	1	2
-70:ee:50:83:2a:36	AirQuality_CheckRoom	Checkroom	{"temperature": 23.4, "humidity": 62, "Pressure": 1006.8, "AbsolutePressure": 1001.3, "Noise": 35, "CO2": 501}	2025-08-01 10:55:02	1	1
-shellytrv-8cf681cd15a2	Heater_Bathroom_2	Bathroom	{"ValvePosition": 100, "TargetTemperature": 21, "Temperature": 19.7, "Battery": 99}	2025-08-01 11:20:09.73	1	2
-shellytrv-842e14ffca22	Heater_ClassRoom3_2	Classroom 3	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 99}	2025-07-27 17:40:07.611	1	2
-shellytrv-588e81a41b77	Heater_ClassRoom1_2	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 71}	2025-07-27 17:40:07.2	1	2
-shellytrv-842e14fe1fc2	Heater_ClassRoom1_4	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 99}	2025-07-27 17:40:04.355	1	2
-70:ee:50:83:2a:6c	AirQuality_Kitchen	Kitchen	{"temperature": 23, "humidity": 58, "Pressure": 1006.9, "AbsolutePressure": 1001.4, "Noise": 33, "CO2": 467}	2025-08-01 10:54:57	1	1
-shellytrv-8cf681be083a	Heater_Bathroom_3	Bathroom	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.7, "Battery": 99}	2025-07-27 17:20:04.562	1	2
-shellytrv-8cf681cd22c2	Heater_Kitchen_4	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 20.9, "Battery": 99}	2025-08-01 11:00:27.209	1	2
-shellytrv-588e81a6306d	Heater_Corridor_1	Corridor	{"ValvePosition": 0, "TargetTemperature": 20, "Temperature": 21.9, "Battery": 83}	2025-08-01 11:00:13.799	1	2
-shellytrv-8cf681c1abc8	Heater_Kitchen_2	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 48}	2025-08-01 11:00:13.551	1	2
-70:ee:50:83:35:00	AirQuality_Corridor	Corridor	{"temperature": 22.6, "humidity": 58, "Pressure": 1004.2, "AbsolutePressure": 1001.3, "Noise": 38, "CO2": 495}	2025-08-01 10:51:57	1	1
-shellytrv-8cf681b70e6c	Heater_Bathroom_1	Bathroom	{"ValvePosition": 100, "TargetTemperature": 22, "Temperature": 18.9, "Battery": 52}	2025-08-01 11:20:08.721	1	2
-70:ee:50:83:2a:82	AirQuality_ClassRoom4	Classroom 4	{"temperature": 22.9, "humidity": 59, "Pressure": 1003.9, "AbsolutePressure": 1002.5, "Noise": 32, "CO2": 494}	2025-08-01 10:55:27	1	1
-shellypro3em-34987a46bc6c	EnergyMeter_Kindergarden_3	Kindergarten	{"a_current": 0.028, "a_voltage": 233.3, "a_act_power": 1.1, "a_aprt_power": 6.6, "a_pf": 0.19, "a_freq": 50, "b_current": 0.086, "b_voltage": 231.3, "b_act_power": 8.8, "b_aprt_power": 19.9, "b_pf": 0.44, "b_freq": 50, "c_current": 0.028, "c_voltage": 230.7, "c_act_power": 0, "c_aprt_power": 6.5, "c_pf": 0, "c_freq": 50, "n_current": null, "total_current": 0.143, "total_act_power": 9.875, "total_aprt_power": 33.056, "a_total_act_energy": 8340171.41, "a_total_act_ret_energy": 319.18, "b_total_act_energy": 10718503.55, "b_total_act_ret_energy": 0.21, "c_total_act_energy": 8628677.6, "c_total_act_ret_energy": 18.45, "total_act": 27687352.56, "total_act_ret": 337.85}	2025-08-03 15:51:33	1	3
-shellypro3em-34987a45dcd4	EnergyMeter_Kindergarden_2	Kindergarten	{"a_current": 0.421, "a_voltage": 230.8, "a_act_power": -20.3, "a_aprt_power": 97.4, "a_pf": 0.21, "a_freq": 50, "b_current": 0.445, "b_voltage": 233.4, "b_act_power": -19.7, "b_aprt_power": 104.1, "b_pf": 0.19, "b_freq": 50, "c_current": 0.438, "c_voltage": 231.5, "c_act_power": -25.1, "c_aprt_power": 101.5, "c_pf": 0.25, "c_freq": 50, "n_current": null, "total_current": 1.305, "total_act_power": -65.12, "total_aprt_power": 302.941, "a_total_act_energy": 15.54, "a_total_act_ret_energy": 824379.71, "b_total_act_energy": 671.73, "b_total_act_ret_energy": 822941.73, "c_total_act_energy": 2906.33, "c_total_act_ret_energy": 840577.08, "total_act": 3593.6, "total_act_ret": 2487898.51}	2025-08-03 15:51:33	1	3
-shellytrv-8cf681d9a230	Heater_DirectorOffice	Director Office	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.2, "Battery": 84}	2025-07-27 16:00:38.741	1	2
-shellytrv-588e81617272	Heater_ClassRoom4_1	Classroom 4	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21, "Battery": 99}	2025-07-27 16:20:02.892	1	2
-shellytrv-8cf681b9c924	Heater_SocialRoom	Social room	{"ValvePosition": -1, "TargetTemperature": 31, "Temperature": 22.3, "Battery": 92}	2025-08-01 11:20:38.663	1	2
-shellytrv-cc86ecb3e4cd	Heater_CheckRoom	Checkroom	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.6, "Battery": 27}	2025-07-27 17:20:10.383	1	2
-shellytrv-842e14ffcbea	Heater_ClassRoom2_3	Classroom 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.4, "Battery": 99}	2025-07-27 17:40:06.971	1	2
-70:ee:50:83:2e:54	AirQuality_ClassRoom1	Classroom 1	{"temperature": 24.8, "humidity": 55, "Pressure": 1007.5, "AbsolutePressure": 1001.9, "Noise": 32, "CO2": 426}	2025-08-01 10:56:36	1	1
-70:ee:50:83:32:66	AirQuality_ClassRoom5	Classroom 5	{"temperature": 21.6, "humidity": 65, "Pressure": 1008, "AbsolutePressure": 1005.1, "Noise": 32, "CO2": 458}	2025-08-01 10:53:30	1	1
-shellypro3em-08f9e0e5121c	EnergyMeter_Kindergarden_1	Kindergarten	{"a_current": 1.558, "a_voltage": 233.3, "a_act_power": 287.4, "a_aprt_power": 363.7, "a_pf": 0.79, "a_freq": 50, "b_current": 0.905, "b_voltage": 231.1, "b_act_power": 146.1, "b_aprt_power": 209.4, "b_pf": 0.7, "b_freq": 50, "c_current": 0.572, "c_voltage": 230.1, "c_act_power": 50.4, "c_aprt_power": 131.8, "c_pf": 0.38, "c_freq": 50, "n_current": null, "total_current": 3.035, "total_act_power": 483.784, "total_aprt_power": 704.934, "a_total_act_energy": 9491460.38, "a_total_act_ret_energy": 2942245.9, "b_total_act_energy": 11522235.31, "b_total_act_ret_energy": 3370131.29, "c_total_act_energy": 8807740.12, "c_total_act_ret_energy": 2959717.58, "total_act": 29821435.8, "total_act_ret": 9272094.77}	2025-08-03 15:51:32	1	3
+COPY public.sensors (id, name, location, latest_data, last_updated, building_id, type_id, floor) FROM stdin;
+70:ee:50:83:2f:6c	AirQuality_DirectorOffice	Director Office	{"temperature": 23.9, "humidity": 59, "Pressure": 1007.6, "AbsolutePressure": 1002, "Noise": 41, "CO2": 826}	2025-08-01 10:55:29	1	1	0
+70:ee:50:83:4e:60	AirQuality_ClassRoom2	Classroom 2	{"temperature": 26.5, "humidity": 51, "Pressure": 1007.8, "AbsolutePressure": 1002.2, "Noise": 32, "CO2": 519}	2025-08-01 10:51:55	1	1	0
+70:ee:50:83:2e:4e	AirQuality_ViceDirectorOffice	Vice Director Office	{}	\N	1	1	0
+shellytrv-8cf681b9c952	Heater_Corridor_4	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.3, "Battery": 99}	2025-08-01 11:00:07.055	1	2	0
+shellytrv-8cf681a52e44	Heater_ClassRoom5_3	Classroom 5	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 20.4, "Battery": 99}	2025-07-27 17:40:08.534	1	2	0
+shellytrv-8cf681b70b5e	Heater_Corridor_3	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.2, "Battery": 45}	2025-08-01 11:00:08.713	1	2	0
+shellytrv-bc33ac022f76	Heater_ClassRoom2_1	Classroom 2	{}	\N	1	2	0
+shellytrv-b4e3f9d9e3d7	Heater_Corridor_5	Corridor	{"ValvePosition": 100, "TargetTemperature": 21, "Temperature": 20.2, "Battery": 60}	2025-08-01 11:00:02.321	1	2	0
+shellytrv-588e816162de	Heater_ClassRoom3_1	Classroom 3	{}	\N	1	2	0
+shellytrv-bc33ac022fa8	Heater_ClassRoom1_3	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.6, "Battery": 99}	2025-07-27 17:40:02.839	1	2	0
+shellytrv-588e81a63315	Heater_ClassRoom4_2	Classroom 4	{}	\N	1	2	0
+shellytrv-588e81a41b47	Heater_ClassRoom5_1	Classroom 5	{}	\N	1	2	0
+shellytrv-8cf681be1032	Heater_ClassRoom5_2	Classroom 5	{}	\N	1	2	0
+shellytrv-8cf681b70b5a	Heater_ClassRoom5_4	Classroom 5	{}	\N	1	2	0
+shellytrv-8cf681cd1598	Heater_StaffToilet	Staff toilet	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 99}	2025-08-01 11:20:12.271	1	2	1
+shellytrv-b4e3f9e30ab3	Heater_Corridor_6	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.7, "Battery": 99}	2025-08-01 11:00:03.832	1	2	0
+shellytrv-8cf681a52e2e	Heater_Kitchen_1	Kitchen	{}	\N	1	2	0
+shellytrv-8cf681e9a780	Heater_Corridor_8	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 99}	2025-08-01 11:20:14.037	1	2	0
+shellytrv-8cf681d9a228	Heater_Corridor_7	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.9, "Battery": 38}	2025-08-01 11:00:03.653	1	2	0
+shellytrv-8cf681a51bae	Heater_OfficeRoom1	Office room 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.4, "Battery": 68}	2025-08-01 11:20:33.448	1	2	1
+shellytrv-b4e3f9d9bc83	Heater_OfficeRoom2	Office room 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.3, "Battery": 99}	2025-08-01 11:20:26.88	1	2	1
+shellytrv-8cf681b9c9ae	Heater_Kitchen_3	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 68}	2025-07-27 18:00:24.019	1	2	0
+shellytrv-bc33ac022fb6	Heater_ClassRoom2_2	Classroom 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.9, "Battery": 99}	2025-07-27 17:40:05.643	1	2	0
+shellytrv-588e81a41b41	Heater_ClassRoom1_1	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 20, "Temperature": 23.2, "Battery": 53}	2025-07-27 17:40:05.322	1	2	0
+70:ee:50:83:4d:e8	AirQuality_OfficeFirstFloor	Office 1st Floor	{"temperature": 24.1, "humidity": 58, "Pressure": 1004.4, "AbsolutePressure": 1001.5, "Noise": 67, "CO2": 506}	2025-08-01 10:50:50	1	1	1
+shellytrv-588e81616fe8	Heater_ClassRoom3_3	Classroom 3	{"ValvePosition": 100, "TargetTemperature": 5, "Temperature": 22, "Battery": 70}	2025-07-06 17:40:11.503	1	2	0
+shellytrv-8cf681be1608	Heater_ViceDirectorOffice	Vice Director Office	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 99}	2025-08-01 11:00:16.614	1	2	0
+70:ee:50:83:2f:44	AirQuality_ClassRoom3	Classroom 3	{"temperature": 25.4, "humidity": 53, "Pressure": 1007.5, "AbsolutePressure": 1001.9, "Noise": 32, "CO2": 515}	2025-08-01 10:56:06	1	1	0
+shellytrv-842e14fe1d64	Heater_ClassRoom4_3	Classroom 4	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.3, "Battery": 24}	2025-08-01 11:20:07.448	1	2	0
+shellytrv-842e14ffcb48	Heater_Corridor_2	Corridor	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.8, "Battery": 99}	2025-08-01 11:00:05.313	1	2	0
+shellytrv-b4e3f9d6249d	Heater_Corridor_9	Corridor	{"ValvePosition": 100, "TargetTemperature": 23, "Temperature": 20.6, "Battery": 99}	2025-08-01 11:00:06.373	1	2	1
+shellytrv-842e14ffaf1c	Heater_OfficeRoom3	Office room 3	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 61}	2025-07-27 17:20:20.539	1	2	1
+70:ee:50:83:2a:36	AirQuality_CheckRoom	Checkroom	{"temperature": 23.4, "humidity": 62, "Pressure": 1006.8, "AbsolutePressure": 1001.3, "Noise": 35, "CO2": 501}	2025-08-01 10:55:02	1	1	0
+shellytrv-8cf681cd15a2	Heater_Bathroom_2	Bathroom	{"ValvePosition": 100, "TargetTemperature": 21, "Temperature": 19.7, "Battery": 99}	2025-08-01 11:20:09.73	1	2	0
+shellytrv-842e14ffca22	Heater_ClassRoom3_2	Classroom 3	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 99}	2025-07-27 17:40:07.611	1	2	0
+shellytrv-588e81a41b77	Heater_ClassRoom1_2	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 71}	2025-07-27 17:40:07.2	1	2	0
+shellytrv-842e14fe1fc2	Heater_ClassRoom1_4	Classroom 1	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.3, "Battery": 99}	2025-07-27 17:40:04.355	1	2	0
+70:ee:50:83:2a:6c	AirQuality_Kitchen	Kitchen	{"temperature": 23, "humidity": 58, "Pressure": 1006.9, "AbsolutePressure": 1001.4, "Noise": 33, "CO2": 467}	2025-08-01 10:54:57	1	1	0
+shellytrv-8cf681be083a	Heater_Bathroom_3	Bathroom	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.7, "Battery": 99}	2025-07-27 17:20:04.562	1	2	0
+shellytrv-8cf681cd22c2	Heater_Kitchen_4	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 20.9, "Battery": 99}	2025-08-01 11:00:27.209	1	2	0
+shellytrv-588e81a6306d	Heater_Corridor_1	Corridor	{"ValvePosition": 0, "TargetTemperature": 20, "Temperature": 21.9, "Battery": 83}	2025-08-01 11:00:13.799	1	2	0
+shellytrv-8cf681c1abc8	Heater_Kitchen_2	Kitchen	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21.4, "Battery": 48}	2025-08-01 11:00:13.551	1	2	0
+70:ee:50:83:35:00	AirQuality_Corridor	Corridor	{"temperature": 22.6, "humidity": 58, "Pressure": 1004.2, "AbsolutePressure": 1001.3, "Noise": 38, "CO2": 495}	2025-08-01 10:51:57	1	1	0
+shellytrv-8cf681b70e6c	Heater_Bathroom_1	Bathroom	{"ValvePosition": 100, "TargetTemperature": 22, "Temperature": 18.9, "Battery": 52}	2025-08-01 11:20:08.721	1	2	0
+70:ee:50:83:2a:82	AirQuality_ClassRoom4	Classroom 4	{"temperature": 22.9, "humidity": 59, "Pressure": 1003.9, "AbsolutePressure": 1002.5, "Noise": 32, "CO2": 494}	2025-08-01 10:55:27	1	1	0
+shellypro3em-34987a46bc6c	EnergyMeter_Kindergarden_3	Kindergarten	{"a_current": 0.028, "a_voltage": 233.3, "a_act_power": 1.1, "a_aprt_power": 6.6, "a_pf": 0.19, "a_freq": 50, "b_current": 0.086, "b_voltage": 231.3, "b_act_power": 8.8, "b_aprt_power": 19.9, "b_pf": 0.44, "b_freq": 50, "c_current": 0.028, "c_voltage": 230.7, "c_act_power": 0, "c_aprt_power": 6.5, "c_pf": 0, "c_freq": 50, "n_current": null, "total_current": 0.143, "total_act_power": 9.875, "total_aprt_power": 33.056, "a_total_act_energy": 8340171.41, "a_total_act_ret_energy": 319.18, "b_total_act_energy": 10718503.55, "b_total_act_ret_energy": 0.21, "c_total_act_energy": 8628677.6, "c_total_act_ret_energy": 18.45, "total_act": 27687352.56, "total_act_ret": 337.85}	2025-08-03 15:51:33	1	3	2
+shellypro3em-34987a45dcd4	EnergyMeter_Kindergarden_2	Kindergarten	{"a_current": 0.421, "a_voltage": 230.8, "a_act_power": -20.3, "a_aprt_power": 97.4, "a_pf": 0.21, "a_freq": 50, "b_current": 0.445, "b_voltage": 233.4, "b_act_power": -19.7, "b_aprt_power": 104.1, "b_pf": 0.19, "b_freq": 50, "c_current": 0.438, "c_voltage": 231.5, "c_act_power": -25.1, "c_aprt_power": 101.5, "c_pf": 0.25, "c_freq": 50, "n_current": null, "total_current": 1.305, "total_act_power": -65.12, "total_aprt_power": 302.941, "a_total_act_energy": 15.54, "a_total_act_ret_energy": 824379.71, "b_total_act_energy": 671.73, "b_total_act_ret_energy": 822941.73, "c_total_act_energy": 2906.33, "c_total_act_ret_energy": 840577.08, "total_act": 3593.6, "total_act_ret": 2487898.51}	2025-08-03 15:51:33	1	3	2
+shellytrv-8cf681d9a230	Heater_DirectorOffice	Director Office	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.2, "Battery": 84}	2025-07-27 16:00:38.741	1	2	0
+shellytrv-588e81617272	Heater_ClassRoom4_1	Classroom 4	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 21, "Battery": 99}	2025-07-27 16:20:02.892	1	2	0
+shellytrv-8cf681b9c924	Heater_SocialRoom	Social room	{"ValvePosition": -1, "TargetTemperature": 31, "Temperature": 22.3, "Battery": 92}	2025-08-01 11:20:38.663	1	2	1
+shellytrv-cc86ecb3e4cd	Heater_CheckRoom	Checkroom	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 22.6, "Battery": 27}	2025-07-27 17:20:10.383	1	2	0
+shellytrv-842e14ffcbea	Heater_ClassRoom2_3	Classroom 2	{"ValvePosition": 0, "TargetTemperature": 5, "Temperature": 23.4, "Battery": 99}	2025-07-27 17:40:06.971	1	2	0
+70:ee:50:83:2e:54	AirQuality_ClassRoom1	Classroom 1	{"temperature": 24.8, "humidity": 55, "Pressure": 1007.5, "AbsolutePressure": 1001.9, "Noise": 32, "CO2": 426}	2025-08-01 10:56:36	1	1	0
+70:ee:50:83:32:66	AirQuality_ClassRoom5	Classroom 5	{"temperature": 21.6, "humidity": 65, "Pressure": 1008, "AbsolutePressure": 1005.1, "Noise": 32, "CO2": 458}	2025-08-01 10:53:30	1	1	0
+shellypro3em-08f9e0e5121c	EnergyMeter_Kindergarden_1	Kindergarten	{"a_current": 1.558, "a_voltage": 233.3, "a_act_power": 287.4, "a_aprt_power": 363.7, "a_pf": 0.79, "a_freq": 50, "b_current": 0.905, "b_voltage": 231.1, "b_act_power": 146.1, "b_aprt_power": 209.4, "b_pf": 0.7, "b_freq": 50, "c_current": 0.572, "c_voltage": 230.1, "c_act_power": 50.4, "c_aprt_power": 131.8, "c_pf": 0.38, "c_freq": 50, "n_current": null, "total_current": 3.035, "total_act_power": 483.784, "total_aprt_power": 704.934, "a_total_act_energy": 9491460.38, "a_total_act_ret_energy": 2942245.9, "b_total_act_energy": 11522235.31, "b_total_act_ret_energy": 3370131.29, "c_total_act_energy": 8807740.12, "c_total_act_ret_energy": 2959717.58, "total_act": 29821435.8, "total_act_ret": 9272094.77}	2025-08-03 15:51:32	1	3	2
 \.
 
 

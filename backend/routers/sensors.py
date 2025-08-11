@@ -128,6 +128,7 @@ async def get_sensor_status(ai_enabled: bool = False):
             s.id,
             s.name,
             s.location,
+            S.floor,
             s.last_updated,
             s.latest_data,
             st.type
@@ -144,7 +145,7 @@ async def get_sensor_status(ai_enabled: bool = False):
     now = datetime.now()
     allSensors = []
 
-    for sensor_id, name, location, last_updated, latest_data, sensor_type in rows:
+    for sensor_id, name, location, floor, last_updated, latest_data, sensor_type in rows:
         ld = latest_data or {}
         status = "green"
         messages = [
@@ -191,6 +192,7 @@ async def get_sensor_status(ai_enabled: bool = False):
             "id": sensor_id,
             "name": name,
             "location": location,
+            "floor": floor,
             "type": sensor_type,
             "last_seen": last_updated.isoformat() if last_updated else None,
             "latest_data": ld,
