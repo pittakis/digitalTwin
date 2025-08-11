@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -21,21 +21,29 @@ const getRowColor = (status, showColors) => {
 const getStatusColor = (status) => {
   switch (status) {
     case "Comfortable":
-      return "#2e7d32"; // green
+      return "#2e7d32";
     case "Moderate":
-      return "#b45f06"; // orange
+      return "#b45f06";
     case "Uncomfortable":
-      return "#a71d2a"; // red
+      return "#a71d2a";
     default:
       return "#000";
   }
 };
 
-// Compute clothing insulation based on outdoor temperature (°C)
-const computeClo = (temp) => {
-  if (temp <= 10) return 1.0;
-  if (temp <= 20) return 0.7;
-  return 0.5;
+// === Indoor parameter derivation from weather ===
+const deriveCloFromTemp = (t) => {
+  if (t <= 0) return 1.0;
+  if (t <= 10) return 0.9;
+  if (t <= 15) return 0.8;
+  if (t <= 20) return 0.7;
+  if (t <= 26) return 0.5;
+  return 0.36;
+};
+
+const deriveIndoorAirVelocity = (outWind) => {
+  const v = (outWind || 0) * 0.12;
+  return Math.max(0.05, Math.min(v, 0.25));
 };
 
 export default function PMV() {
@@ -54,10 +62,13 @@ export default function PMV() {
 
     axios.get(weatherUrl)
       .then(res => {
-        const w = res.data;
-        const met = 1.1;  // metabolic rate (met)
-        const clo = computeClo(w.main.temp);
-        const v_air = Math.min(Math.max(w.wind.speed || 0.1, 0), 0.3);
+        const outdoorTemp = res.data?.main?.temp ?? 20;
+        const outdoorWind = res.data?.wind?.speed ?? 0.1;
+
+        const met = 1.1; // office/seated light work
+        const clo = deriveCloFromTemp(outdoorTemp);
+        const v_air = deriveIndoorAirVelocity(outdoorWind);
+
         setParams({ met, clo, v_air });
       })
       .catch(() => setError("Failed to load weather data"));
@@ -73,85 +84,113 @@ export default function PMV() {
 
   return (
     <div style={styles.page}>
-      <button onClick={() => navigate(-1)} style={styles.backBtn} aria-label="Go back">
-        ⬅ Back
-      </button>
-
-      <h2 style={styles.title}>📋 PMV Sensor List</h2>
-      {error && <p style={styles.error}>{error}</p>}
-
-      {/* Controls with parameter badges */}
-      <div style={styles.controls}>
-        <button onClick={() => setShowColors(prev => !prev)} style={styles.toggleBtn}>
-          {showColors ? "Hide Colors" : "Show Colors"}
+      {/* Fixed header */}
+      <div style={styles.header}>
+        <button onClick={() => navigate(-1)} style={styles.backBtn} aria-label="Go back">
+          ⬅ Back
         </button>
-        {params && (
-          <div style={styles.badges}>
-            <span style={styles.badge}>
-              Metabolic Rate: {params.met}
-            </span>
-            <span style={styles.badge}>
-              Clothing Insulation: {params.clo}
-            </span>
-            <span style={styles.badge}>
-              Air Velocity: {params.v_air} m/s
-            </span>
-          </div>
-        )}
+        <h2 style={styles.title}>📋 PMV Sensor List</h2>
       </div>
+        {/* Controls */}
+        <div style={styles.controls}>
+          <button
+            onClick={() => setShowColors(prev => !prev)}
+            style={{
+              ...styles.toggleRealtimeBtn,
+              backgroundColor: showColors ? "#28a745" : "#6c757d",
+            }}
+          >
+            {showColors ? "Row Colors ON" : "Row Colors OFF"}
+          </button>
 
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>Sensor ID</th>
-            <th style={styles.th}>Timestamp</th>
-            <th style={styles.th}>Name</th>
-            <th style={styles.th}>Temperature (°C)</th>
-            <th style={styles.th}>Humidity (%)</th>
-            <th style={styles.th}>PMV</th>
-            <th style={styles.th}>PPD (%)</th>
-            <th style={styles.th}>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pmvData.map((sensor, idx) => (
-            <tr key={sensor.id} style={{
-                ...(idx % 2 === 0 ? styles.rowEven : styles.rowOdd),
-                ...getRowColor(sensor.status, showColors),
-              }}>
-              <td style={styles.td}>{sensor.id}</td>
-              <td style={styles.td}>{sensor.timestamp ? new Date(sensor.timestamp).toLocaleString() : "-"}</td>
-              <td style={styles.td}>{sensor.name}</td>
-              <td style={styles.td}>{sensor.temperature ?? "-"}</td>
-              <td style={styles.td}>{sensor.humidity ?? "-"}</td>
-              <td style={styles.td}>{sensor.pmv}</td>
-              <td style={styles.td}>{sensor.ppd}</td>
-              <td style={{ ...styles.td, fontWeight: "bold", color: getStatusColor(sensor.status) }}>
-                {sensor.status}
-              </td>
+          {params && (
+            <div style={styles.badges}>
+              <span style={styles.badge}>Metabolic Rate: {params.met.toFixed(2)} met</span>
+              <span style={styles.badge}>Clothing Insulation: {params.clo.toFixed(2)} clo</span>
+              <span style={styles.badge}>Air Velocity: {params.v_air.toFixed(2)} m/s</span>
+            </div>
+          )}
+        </div>
+      {/* Scrollable content */}
+      <div style={styles.scrollArea}>
+        {error && <p style={styles.error}>{error}</p>}
+
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Sensor ID</th>
+              <th style={styles.th}>Timestamp</th>
+              <th style={styles.th}>Name</th>
+              <th style={styles.th}>Temperature (°C)</th>
+              <th style={styles.th}>Humidity (%)</th>
+              <th style={styles.th}>PMV</th>
+              <th style={styles.th}>PPD (%)</th>
+              <th style={styles.th}>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {pmvData.map((sensor, idx) => (
+              <tr
+                key={sensor.id}
+                style={{
+                  ...(idx % 2 === 0 ? styles.rowEven : styles.rowOdd),
+                  ...getRowColor(sensor.status, showColors),
+                }}
+              >
+                <td style={styles.td}>{sensor.id}</td>
+                <td style={styles.td}>
+                  {sensor.timestamp ? new Date(sensor.timestamp).toLocaleString() : "-"}
+                </td>
+                <td style={styles.td}>{sensor.name}</td>
+                <td style={styles.td}>{sensor.temperature ?? "-"}</td>
+                <td style={styles.td}>{sensor.humidity ?? "-"}</td>
+                <td style={styles.td}>{sensor.pmv}</td>
+                <td style={styles.td}>{sensor.ppd}</td>
+                <td style={{ ...styles.td, fontWeight: "bold", color: getStatusColor(sensor.status) }}>
+                  {sensor.status}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 const styles = {
   page: {
-    padding: "2rem",
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
     fontFamily: "Segoe UI, sans-serif",
   },
+  header: {
+    flex: "0 0 auto",
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    padding: "1rem 2rem",
+    borderBottom: "1px solid #ddd",
+    backgroundColor: "#fff",
+    zIndex: 1,
+  },
+  scrollArea: {
+    flex: "1 1 auto",
+    overflowY: "auto",
+    padding: "1rem 2rem",
+  },
   title: {
-    marginBottom: "1rem",
+    margin: 0,
     color: "#2c3e50",
+    textAlign: "center",
+    flex: 1,
   },
   backBtn: {
     background: "none",
     border: "none",
     cursor: "pointer",
     fontSize: "1rem",
-    marginBottom: "1rem",
     color: "#007BFF",
   },
   controls: {
@@ -159,19 +198,22 @@ const styles = {
     alignItems: "center",
     gap: "1rem",
     marginBottom: "1rem",
+    flexWrap: "wrap",
+    padding: "1rem 2rem",
   },
-  toggleBtn: {
-    backgroundColor: "#007BFF",
-    color: "#fff",
+  toggleRealtimeBtn: {
     padding: "0.5rem 1rem",
     border: "none",
     borderRadius: "6px",
+    color: "#fff",
     cursor: "pointer",
     fontSize: "1rem",
+    fontWeight: "bold",
   },
   badges: {
     display: "flex",
     gap: "0.5rem",
+    flexWrap: "wrap",
   },
   badge: {
     backgroundColor: "#e0e0e0",
@@ -198,12 +240,8 @@ const styles = {
     borderBottom: "1px solid #eee",
     textAlign: "center",
   },
-  rowEven: {
-    backgroundColor: "#fafafa",
-  },
-  rowOdd: {
-    backgroundColor: "#fff",
-  },
+  rowEven: { backgroundColor: "#fafafa" },
+  rowOdd: { backgroundColor: "#fff" },
   error: {
     color: "crimson",
     marginBottom: "1rem",
