@@ -199,6 +199,7 @@ function EnergyOverview() {
                               <h4 style={{ margin: "0 0 8px" }}>LSTM Predictions</h4>
                               <div style={{ marginBottom: 8 }}>
                                 <div><strong>Predicted Consumption:</strong> {formatNumber(aiData[r.id].predicted_consumption, 3)}</div>
+                                <div><strong>Predicted Cost:</strong> {formatNumber(aiData[r.id].predicted_consumption * 0.15, 2)} € @ 0.15 €/kWh</div>
                               </div>
                             </div>
                           )}
