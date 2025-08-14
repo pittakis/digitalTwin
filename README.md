@@ -54,8 +54,3 @@ chmod +x ./setUpUbuntuMacOs.sh
    docker compose up --build
    ``` 
 2. **Open your browser at http://localhost:7779**
-
-## License
-This project is licensed under the MIT License. See LICENSE for details.
-
-
