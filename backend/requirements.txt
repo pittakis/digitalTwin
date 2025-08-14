@@ -10,3 +10,8 @@ paho-mqtt
 scikit-learn
 numpy
 openai
+pandas
+pydantic
+torch
+matplotlib
+joblib

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import axios from 'axios';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -7,37 +7,86 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Info } from 'lucide-react';
 
 const BuildingViewer = () => {
-  let params = useParams()
-  const mountRef = useRef(null);
-  const [sensorNames, setSensorNames] = useState([]);
+  const params = useParams();
+  const navigate = useNavigate();
+
+  // Helper to handle GLB node names like "IfcSensor/sensorname"
+  const getBaseName = (n) => (typeof n === 'string' ? n.split('/').pop() : n);
+
+  // ----- State (declare before using it) -----
+  const [sensors, setSensors] = useState([]);
   const [showSensorInfo, setShowSensorInfo] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState(null);
   const [selectedName, setSelectedName] = useState('none');
   const [loading, setLoading] = useState(true);
   const [showInstructions, setShowInstructions] = useState(false);
 
+  // ----- Refs -----
+  const mountRef = useRef(null);
   const selectedNameRef = useRef('none');
+  const showSensorInfoRef = useRef(showSensorInfo);
   const sceneRef = useRef();
   const cameraRef = useRef();
   const controlsRef = useRef();
-  const showSensorInfoRef = useRef(showSensorInfo);
-  const navigate = useNavigate();
-
   const originalColors = useRef(new Map());
   const movement = useRef({ forward: false, backward: false, left: false, right: false });
   const speedRef = useRef(0.05);
   const speedMultiplierRef = useRef(1);
 
-  // Fetch sensor names once
+  useEffect(() => { showSensorInfoRef.current = showSensorInfo; }, [showSensorInfo]);
+
+  // ----- Floor filtering -----
+  const floorParam = Number(params.floor ?? 0);
+  const allowedFloors = useMemo(() => (floorParam === 0 ? [0, 2] : [floorParam]), [floorParam]);
+  const currentFloorSensors = useMemo(
+    () => sensors.filter(s => allowedFloors.includes(Number(s.floor))),
+    [sensors, allowedFloors]
+  );
+  const currentSensorNameSet = useMemo(
+    () => new Set(currentFloorSensors.map(s => s.name)),
+    [currentFloorSensors]
+  );
+
+  // ----- Fetch sensors once -----
   useEffect(() => {
     axios.get('http://localhost:7781/api/getSensorNames')
-      .then(res => setSensorNames(res.data))
+      .then(res => {
+        // API returns: [ [name, floor], ... ]
+        const parsed = Array.isArray(res.data)
+          ? res.data.map(([name, floor]) => ({ name, floor }))
+          : [];
+        setSensors(parsed);
+      })
       .catch(err => console.error('Failed to fetch sensor names', err));
   }, []);
 
-  useEffect(() => { showSensorInfoRef.current = showSensorInfo; }, [showSensorInfo]);
+  const fitCameraToObject = (camera, object, controls, offset = 1.25) => {
+    // Make sure world matrices are up to date
+    object.updateWorldMatrix(true, true);
 
-  // Initialize Three.js once
+    const box = new THREE.Box3().setFromObject(object);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    const maxSize = Math.max(size.x, size.y, size.z);
+    const fitHeightDistance = maxSize / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)));
+    const fitWidthDistance = fitHeightDistance / camera.aspect;
+    const distance = offset * Math.max(fitHeightDistance, fitWidthDistance);
+
+    // Approach the center from a pleasant diagonal direction
+    const direction = new THREE.Vector3(1, 1, 1).normalize();
+
+    camera.position.copy(center.clone().add(direction.multiplyScalar(distance)));
+    camera.near = distance / 100;
+    camera.far = distance * 100;
+    camera.updateProjectionMatrix();
+
+    controls.target.copy(center);
+    controls.update();
+  };
+
+
+  // ----- Three.js init (recreate when the list for this floor changes) -----
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -57,6 +106,18 @@ const BuildingViewer = () => {
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
 
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1, 0);
+    controls.enableZoom = false;
+    controls.update();
+    controlsRef.current = controls;
+
+    // Lights
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(3, 10, 10);
+    scene.add(dirLight);
+
     // Click & wheel
     const onClick = e => {
       if (!showSensorInfoRef.current) return;
@@ -68,19 +129,21 @@ const BuildingViewer = () => {
       if (!hits.length) return;
       let obj = hits[0].object;
       while (obj && !obj.name) obj = obj.parent;
-      if (obj && sensorNames.includes(obj.name)) {
-        const name = obj.name;
-        if (selectedNameRef.current === name) {
-          resetHighlights();
-          setSelectedSensor(null);
-          setSelectedName('none');
-          selectedNameRef.current = 'none';
-        } else {
-          handleSensorSelect(name);
+
+      if (obj) {
+        const base = getBaseName(obj.name);
+        if (currentSensorNameSet.has(base)) {
+          const name = base;
+          if (selectedNameRef.current === name) {
+            resetHighlights();
+            setSelectedSensor(null);
+            setSelectedName('none');
+            selectedNameRef.current = 'none';
+          } else {
+            handleSensorSelect(name);
+          }
         }
       }
-      console.log('Clicked on:', obj ? obj.name : 'none');
-      console.log('parent:', obj ? obj.parent.name : 'none');
     };
     const onWheel = e => {
       speedMultiplierRef.current = Math.max(0.01, Math.min(5, speedMultiplierRef.current - e.deltaY * 0.001));
@@ -88,20 +151,8 @@ const BuildingViewer = () => {
     mount.addEventListener('click', onClick);
     mount.addEventListener('wheel', onWheel);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1, 0);
-    controls.enableZoom = false;
-    controls.update();
-    controlsRef.current = controls;
-
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(3, 10, 10);
-    scene.add(dirLight);
-
-    // Load model
-    console.log('Loading model for floor:', params.floor);
-    let path = "/floor_" + params.floor + ".glb";
+    // Load model for this floor
+    const path = "/floor_" + params.floor + ".glb";
     new GLTFLoader().load(
       path,
       gltf => {
@@ -112,59 +163,30 @@ const BuildingViewer = () => {
           const name = child.name.toLowerCase();
           const parentName = child.parent?.name?.toLowerCase() || '';
 
-          // Wall
           if (name.includes('wall') || parentName.includes('wall')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xf5e1c0, // light plaster/beige
-              roughness: 0.9,
-              metalness: 0.1
-            });
-
-            // Floor
+            child.material = new THREE.MeshStandardMaterial({ color: 0xf5e1c0, roughness: 0.9, metalness: 0.1 });
           } else if (name.includes('floor') || parentName.includes('floor')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x00FFCC99, // warm brown wood
-              roughness: 0.6,
-              metalness: 0.3
-            });
-} else if (child.name.includes('IfcGeographicElementToposolidOgólne_—_1000_mm618174')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x3a6e3a, // rich green
-              roughness: 1.0,
-              metalness: 0.0
-            });
-
-            // Doors
+            child.material = new THREE.MeshStandardMaterial({ color: 0x00ffcc99, roughness: 0.6, metalness: 0.3 });
+          } else if (child.name.includes('IfcGeographicElementToposolidOgólne_—_1000_mm618174')) {
+            child.material = new THREE.MeshStandardMaterial({ color: 0x3a6e3a, roughness: 1.0, metalness: 0.0 });
           } else if (name.includes('door') || parentName.includes('door')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x8b5a2b, // warm brown wood
-              roughness: 0.6,
-              metalness: 0.3
-            });
-
-            // Windows
+            child.material = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6, metalness: 0.3 });
           } else if (name.includes('window') || parentName.includes('window')) {
             child.material = new THREE.MeshPhysicalMaterial({
-              color: 0xa0a0a0,
-              roughness: 0.1,
-              metalness: 0.0,
-              transparent: true,
-              opacity: 0.4,
-              // transmission: 1.0,  // better glass realism (WebGL2+ only) takes too much performance
-              thickness: 0.2,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.1
+              color: 0xa0a0a0, roughness: 0.1, metalness: 0.0, transparent: true, opacity: 0.4,
+              thickness: 0.2, clearcoat: 1.0, clearcoatRoughness: 0.1
             });
           }
         });
 
+        fitCameraToObject(cameraRef.current, gltf.scene, controlsRef.current, 1.35);
         setLoading(false);
       },
       undefined,
       err => console.error('Error loading model:', err)
     );
 
-    // Keyboard movement & resize
+    // Keyboard & resize
     const down = e => {
       if (e.code === 'KeyW') movement.current.forward = true;
       if (e.code === 'KeyS') movement.current.backward = true;
@@ -214,9 +236,9 @@ const BuildingViewer = () => {
       mount.removeEventListener('wheel', onWheel);
       mount.removeChild(renderer.domElement);
     };
-  }, [sensorNames]);
+  }, [params.floor, currentFloorSensors, currentSensorNameSet]);
 
-  // Highlight
+  // ----- Highlight helpers -----
   const highlightObject = object => {
     object.traverse(child => {
       if (child.isMesh) {
@@ -228,7 +250,6 @@ const BuildingViewer = () => {
     });
   };
 
-  // Reset highlights
   const resetHighlights = () => {
     sceneRef.current.traverse(child => {
       if (child.isMesh) {
@@ -239,7 +260,7 @@ const BuildingViewer = () => {
     originalColors.current.clear();
   };
 
-  // Select sensor
+  // ----- Sensor select -----
   const handleSensorSelect = async name => {
     try {
       if (selectedNameRef.current === name) {
@@ -247,32 +268,50 @@ const BuildingViewer = () => {
       }
       const res = await axios.get(`http://localhost:7781/api/getSensorData/${name}`);
       setSelectedSensor(res.data);
-      const obj = sceneRef.current.getObjectByName(name);
+
+      // Try exact, prefixed, then traverse by base name
+      let obj = sceneRef.current.getObjectByName(name);
+      if (!obj) obj = sceneRef.current.getObjectByName(`IfcSensor/${name}`);
+      if (!obj) {
+        sceneRef.current.traverse(child => {
+          if (!obj && getBaseName(child.name) === name) obj = child;
+        });
+      }
       if (!obj) return;
-      resetHighlights(); highlightObject(obj);
+
+      resetHighlights();
+      highlightObject(obj);
+
       const box = new THREE.Box3().setFromObject(obj);
       const center = new THREE.Vector3(); box.getCenter(center);
       controlsRef.current.target.copy(center);
+
       const size = new THREE.Vector3(); box.getSize(size);
       const maxDim = Math.max(size.x, size.y, size.z);
-      const distance = maxDim * 3;
+      const distance = Math.max(maxDim * 3, 1.2); // minimum distance just in case
+
+      // Camera direction was fixed from Blender – keep as-is
       const quaternion = new THREE.Quaternion(); obj.getWorldQuaternion(quaternion);
       const front = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion).normalize();
+
       cameraRef.current.position.copy(center.clone().add(front.multiplyScalar(distance)));
       controlsRef.current.update();
-      setSelectedName(name); selectedNameRef.current = name;
+
+      setSelectedName(name);
+      selectedNameRef.current = name;
     } catch (err) {
       console.error('Failed to fetch sensor data:', err);
     }
   };
 
+  // ----- UI -----
   return (
     <>
-      {/* Loading overlay with spinner */}
       {loading && (
         <div style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-          background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20
+          background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', zIndex: 20
         }}>
           <svg width="60" height="60" viewBox="0 0 100 100" style={{ marginBottom: '1rem' }}>
             <circle cx="50" cy="50" r="32" strokeWidth="8" stroke="#fff" strokeDasharray="50.265" fill="none" strokeLinecap="round">
@@ -283,31 +322,52 @@ const BuildingViewer = () => {
         </div>
       )}
 
-      {/* UI Bar */}
       <div style={styles.uiBar}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>Back</button>
-        <button onClick={() => { setShowSensorInfo(prev => { if (prev) { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; } return !prev; }); }} style={styles.toggleButton}>
+        <button
+          onClick={() => {
+            setShowSensorInfo(prev => {
+              if (prev) { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; }
+              return !prev;
+            });
+          }}
+          style={styles.toggleButton}
+        >
           {showSensorInfo ? 'Hide Sensor Data' : 'Show Sensor Data'}
         </button>
+
         {showSensorInfo && (
-          <select onChange={e => { const val = e.target.value; if (val === 'none') { resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; } else { handleSensorSelect(val); } }} value={selectedName} style={styles.dropdown}>
+          <select
+            onChange={e => {
+              const val = e.target.value;
+              if (val === 'none') {
+                resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none';
+              } else {
+                handleSensorSelect(val);
+              }
+            }}
+            value={selectedName}
+            style={styles.dropdown}
+          >
             <option value="none">None</option>
-            {sensorNames.map(name => <option key={name} value={name}>{name}</option>)}
+            {currentFloorSensors.map(s => (
+              <option key={s.name} value={s.name}>{s.name}</option>
+            ))}
           </select>
         )}
+
         <button onClick={() => setShowInstructions(prev => !prev)} style={styles.infoButton}><Info /></button>
       </div>
 
-      {/* Instructions Modal */}
       {showInstructions && (
         <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
             <h2>How to Use</h2>
             <ul>
-              <li><strong>Move:</strong> Use <em>W</em>/<em>S</em>/<em>A</em>/<em>D</em> to fly in the direction the camera is pointing (Click to point to a direction).</li>
-              <li><strong>Speed:</strong> Scroll up/down to adjust movement speed.</li>
-              <li><strong>Select Sensor:</strong> Click on a sensor in the 3D model or choose from the dropdown.</li>
-              <li><strong>Deselect:</strong> Click the same sensor again or select "None".</li>
+              <li><strong>Move:</strong> W / A / S / D</li>
+              <li><strong>Speed:</strong> Mouse wheel</li>
+              <li><strong>Select Sensor:</strong> Click it in 3D or pick from dropdown</li>
+              <li><strong>Deselect:</strong> Click the same sensor again or choose “None”</li>
             </ul>
             <button onClick={() => setShowInstructions(false)} style={styles.closeButton}>Close</button>
           </div>

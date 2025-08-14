@@ -31,13 +31,13 @@ def get_sensor_names():
     conn = connect_to_db()
     if conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sensors ORDER BY name")
-        sensor_names = [row[0] for row in cursor.fetchall()]
+        cursor.execute("SELECT name, floor FROM sensors ORDER BY floor, name")
+        sensors = cursor.fetchall()
         cursor.close()
         conn.close()
-    if not sensor_names:
+    if not sensors:
         raise HTTPException(status_code=404, detail="No sensors found")
-    return sensor_names
+    return sensors
 
 @router.get("/getSensorData/{sensor_name}")
 def get_sensor_data(sensor_name: str):
