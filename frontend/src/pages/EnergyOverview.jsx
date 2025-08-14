@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { Fragment } from "react";
 
 function EnergyOverview() {
   const navigate = useNavigate();
@@ -8,12 +9,22 @@ function EnergyOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // sorting state
+  const [sortKey, setSortKey] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+
+  // expanded rows + AI data per row
+  const [expanded, setExpanded] = useState({});   // { [id]: true/false }
+  const [aiData, setAiData] = useState({});       // { [id]: any }
+  const [aiLoading, setAiLoading] = useState({}); // { [id]: bool }
+  const [aiError, setAiError] = useState({});     // { [id]: string|null }
+
   const fetchData = async () => {
     try {
       const res = await axios.get("http://localhost:7781/api/energy");
-      setData(res.data);
+      setData(res.data || {});
       setError(null);
-    } catch (err) {
+    } catch {
       setError("⚠️ Failed to fetch energy data.");
     } finally {
       setLoading(false);
@@ -26,90 +37,338 @@ function EnergyOverview() {
     return () => clearInterval(interval);
   }, []);
 
-  const renderCard = (id, info) => (
-    <div key={id} style={styles.card}>
-      <h3 style={styles.cardTitle}>🔌 {id || "Unnamed Sensor"}</h3>
-      <p><strong>Name:</strong> {info.name}</p>
-      <p><strong>Type:</strong> {info.type}</p>
-      <p><strong>Timestamp:</strong> {info.timestamp ? new Date(info.timestamp).toLocaleString() : "N/A"}</p>
-      <p><strong>Active Power:</strong> {info.total_active_power_kw} kW</p>
-      <hr />
-      <p><strong>Power Factor:</strong> {info.power_factor}</p>
-      <p><strong>Phase Imbalance:</strong></p>
-      <ul style={styles.phaseList}>
-        {info.phase_imbalance_percent && Object.entries(info.phase_imbalance_percent).map(([phase, pct]) => (
-          <li key={phase}>{phase}: {pct}%</li>
-        ))}
-      </ul>
-    </div>
+  // to array + sorting
+  const rows = useMemo(() => {
+    const arr = Object.entries(data).map(([id, info]) => ({ id, ...info }));
+
+    const compare = (a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      let va = a?.[sortKey];
+      let vb = b?.[sortKey];
+
+      if (sortKey === "datetime") {
+        va = va ? new Date(va).getTime() : 0;
+        vb = vb ? new Date(vb).getTime() : 0;
+      }
+      if (typeof va === "string") va = va.toLowerCase();
+      if (typeof vb === "string") vb = vb.toLowerCase();
+
+      if (va == null && vb == null) return 0;
+      if (va == null) return -1 * dir;
+      if (vb == null) return 1 * dir;
+
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      return 0;
+    };
+
+    return arr.sort(compare);
+  }, [data, sortKey, sortDir]);
+
+  const onSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortHeader = ({ label, keyName, width }) => (
+    <th
+      onClick={() => onSort(keyName)}
+      style={{ ...styles.th, cursor: "pointer", width }}
+      aria-sort={sortKey === keyName ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+      title={`Sort by ${label}`}
+    >
+      <span>{label}</span>
+      <span style={styles.sortIcon}>
+        {sortKey === keyName ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+      </span>
+    </th>
   );
 
-  return (
-    <div style={styles.container}>
-      <button
-        onClick={() => navigate(-1)}
-        style={styles.backBtn}
-        aria-label="Go back"
-      >
-        ⬅ Back
-      </button>
+  const formatNumber = (n, digits = 2) =>
+    typeof n === "number" && isFinite(n) ? n.toFixed(digits) : "—";
+  const formatBool = (b) => (b === true ? "Yes" : b === false ? "No" : "—");
+  const formatPhaseImbalance = (obj) => {
+    if (!obj || !Object.keys(obj).length) return "—";
+    return Object.entries(obj)
+      .map(([ph, pct]) => `${ph}: ${pct}%`)
+      .join(" · ");
+  };
 
-      <h2 style={styles.header}>⚡ Energy Meter Overview</h2>
-      {loading && <p>Loading data...</p>}
-      {error && <p style={styles.error}>{error}</p>}
-      <div style={styles.grid}>
-        {Object.entries(data).map(([id, info]) => renderCard(id, info))}
+  // Expand row + POST full row to AI endpoint once
+  const toggleExpand = async (row) => {
+    setExpanded((prev) => ({ ...prev, [row.id]: !prev[row.id] }));
+
+    if (!aiData[row.id] && !aiLoading[row.id] && !aiError[row.id]) {
+      try {
+        setAiLoading((p) => ({ ...p, [row.id]: true }));
+        setAiError((p) => ({ ...p, [row.id]: null }));
+        const res = await axios.get(`http://localhost:7781/api/energy/ai/${encodeURIComponent(row.id)}`);
+        setAiData((p) => ({ ...p, [row.id]: res.data }));
+      } catch (e) {
+        setAiError((p) => ({ ...p, [row.id]: "Failed to fetch AI results" }));
+      } finally {
+        setAiLoading((p) => ({ ...p, [row.id]: false }));
+      }
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      {/* Sticky header */}
+      <div style={styles.header}>
+        <button onClick={() => navigate(-1)} style={styles.backBtn} aria-label="Go back">
+          ⬅ Back
+        </button>
+        <h2 style={styles.headerTitle}>⚡ Energy Meter Overview</h2>
+      </div>
+
+      {/* Scrollable content area */}
+      <div style={styles.scrollArea}>
+        {loading && <p>Loading data...</p>}
+        {error && <p style={styles.error}>{error}</p>}
+
+        {!loading && !error && (
+          <div style={styles.tableWrap}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ ...styles.th, width: 72 }}>Details</th>
+                  <SortHeader label="ID" keyName="id" width="260px" />
+                  <SortHeader label="Name" keyName="name" width="230px" />
+                  <SortHeader label="Location" keyName="location" width="180px" />
+                  <SortHeader label="Datetime" keyName="datetime" width="190px" />
+                  <SortHeader label="Active Power (kW)" keyName="total_active_power_kw" width="160px" />
+                  <SortHeader label="Power Factor" keyName="power_factor" width="120px" />
+                  <SortHeader label="Consumption (kWh)" keyName="consumption_kwh" width="160px" />
+                  <SortHeader label="Cost" keyName="cost" width="110px" />
+                  <SortHeader label="Max Voltage" keyName="max_voltage" width="100px" />
+                  <SortHeader label="Min Voltage" keyName="min_voltage" width="100px" />
+                  <SortHeader label="Reversed" keyName="reversed" width="110px" />
+                  <SortHeader label="Missing" keyName="missing" width="110px" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => (
+                  <Fragment key={r.id}>
+                    <tr style={idx % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                      <td style={styles.tdCenter}>
+                        <button
+                          onClick={() => toggleExpand(r)}
+                          style={{
+                            ...styles.detailsBtn,
+                            backgroundColor: expanded[r.id] ? "#dc3545" : "#28a745",
+                          }}
+                          title={expanded[r.id] ? "Hide details" : "Show details"}
+                        >
+                          {expanded[r.id] ? "−" : "+"}
+                        </button>
+                      </td>
+                      <td style={styles.tdCenter} title={r.id}>{r.id}</td>
+                      <td style={styles.tdCenter}>{r.name || "—"}</td>
+                      <td style={styles.tdCenter}>{r.location || "—"}</td>
+                      <td style={styles.tdCenter}>
+                        {r.datetime ? new Date(r.datetime).toLocaleString() : "—"}
+                      </td>
+                      <td style={styles.tdCenter}>{formatNumber(r.total_active_power_kw, 3)}</td>
+                      <td style={styles.tdCenter}>{formatNumber(r.power_factor, 3)}</td>
+                      <td style={styles.tdCenter}>{formatNumber(r.consumption_kwh, 3)}</td>
+                      <td style={styles.tdCenter}>
+                        {typeof r.cost === "number" ? `${r.cost.toFixed(2)} €` : "—"}
+                        {typeof r.tariff_rate === "number" && (
+                          <span style={styles.subtle}> @ {r.tariff_rate} €/kWh</span>
+                        )}
+                      </td>
+                      <td style={styles.tdCenter}>{formatNumber(r.max_voltage, 1)}</td>
+                      <td style={styles.tdCenter}>{formatNumber(r.min_voltage, 1)}</td>
+                      <td style={styles.tdCenter}>{formatBool(r.reversed)}</td>
+                      <td style={styles.tdCenter}>{formatBool(r.missing)}</td>
+                    </tr>
+
+                    {expanded[r.id] && (
+                      <tr>
+                        <td style={styles.expandedCell} colSpan={15}>
+                          {/* AI content area */}
+                          {aiLoading[r.id] && <div style={styles.aiLoading}>Loading AI results…</div>}
+                          {aiError[r.id] && <div style={styles.aiError}>{aiError[r.id]}</div>}
+                          {!aiLoading[r.id] && !aiError[r.id] && aiData[r.id] && (
+                            <div style={styles.aiBox}>
+                              <h4 style={{ margin: "0 0 8px" }}>LSTM Predictions</h4>
+                              <div style={{ marginBottom: 8 }}>
+                                <div><strong>Predicted Consumption:</strong> {formatNumber(aiData[r.id].predicted_consumption, 3)}</div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Raw phase details in expanded view */}
+                          <div style={styles.aiBox}>
+                            <h4 style={{ margin: "0 0 8px" }}>Phase Imbalance Details</h4>
+                            {r.phase_imbalance_percent && Object.keys(r.phase_imbalance_percent).length ? (
+                              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                {Object.entries(r.phase_imbalance_percent).map(([ph, pct]) => (
+                                  <li key={ph}><strong>{ph}</strong>: {pct}%</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <em style={{ color: "#6b7280" }}>No phase imbalance data</em>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td style={styles.tdCenter} colSpan={15}>No energy data.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    padding: "2rem",
+  page: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
     fontFamily: "Segoe UI, sans-serif",
     background: "#f9fafb",
-    minHeight: "100vh",
   },
   header: {
-    fontSize: "1.75rem",
-    marginBottom: "1.5rem",
-  },
-  grid: {
+    flex: "0 0 auto",
     display: "flex",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "1.5rem",
-  },
-  card: {
+    alignItems: "center",
+    gap: "1rem",
+    padding: "1rem 2rem",
+    borderBottom: "1px solid #ddd",
     background: "#fff",
-    width: "400px",
-    borderRadius: "1rem",
-    boxShadow: "0 4px 15px rgba(217,83,79,0.1)",
-    padding: "1.75rem",
-    transition: "transform 0.2s",
+    position: "sticky",
+    top: 0,
+    zIndex: 10,
   },
-  cardTitle: {
-    marginBottom: "0.75rem",
-    fontSize: "1.2rem",
-    color: "#333",
-  },
-  phaseList: {
-    listStyle: "none",
-    paddingLeft: "50px",
+  headerTitle: {
     margin: 0,
+    fontSize: "1.6rem",
+    color: "#0f172a",
+    textAlign: "center",
+    flex: 1,
+  },
+  scrollArea: {
+    flex: "1 1 auto",
+    overflow: "auto",
+    padding: "1rem 2rem 2rem",
   },
   error: {
     color: "crimson",
     fontWeight: 500,
+    marginBottom: "1rem",
   },
   backBtn: {
     background: "none",
     border: "none",
     cursor: "pointer",
     fontSize: "1rem",
-    marginBottom: "1rem",
     color: "#007BFF",
-  }
+  },
+  tableWrap: {
+    overflowX: "auto",
+    background: "#fff",
+    borderRadius: "1rem",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.06)",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "separate",
+    borderSpacing: 0,
+    minWidth: "1200px",
+  },
+  th: {
+    position: "sticky",
+    top: 0,
+    background: "#f1f5f9",
+    textAlign: "center",
+    fontWeight: 600,
+    padding: "12px 14px",
+    fontSize: "0.95rem",
+    borderBottom: "1px solid #e5e7eb",
+    whiteSpace: "nowrap",
+    zIndex: 1,
+  },
+  sortIcon: {
+    marginLeft: 8,
+    fontSize: "0.85em",
+    opacity: 0.7,
+  },
+  rowEven: { backgroundColor: "#fff" },
+  rowOdd: { backgroundColor: "#fafafa" },
+  tdCenter: {
+    padding: "12px 14px",
+    borderBottom: "1px solid #f8fafc",
+    color: "#111827",
+    textAlign: "center",
+    whiteSpace: "nowrap",
+    maxWidth: 380,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  subtle: {
+    marginLeft: 6,
+    fontSize: "0.85em",
+    color: "#6b7280",
+  },
+  detailsBtn: {
+    border: "none",
+    color: "#fff",
+    padding: "6px 10px",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontWeight: 600,
+  },
+  expandedCell: {
+    padding: "14px",
+    background: "#f8fafc",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  aiBox: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 8,
+    padding: "10px 12px",
+    marginBottom: 10,
+  },
+  aiLoading: {
+    padding: "10px 12px",
+    marginBottom: 10,
+    background: "#fff8e1",
+    border: "1px solid #ffe082",
+    borderRadius: 8,
+  },
+  aiError: {
+    padding: "10px 12px",
+    marginBottom: 10,
+    background: "#fdecea",
+    border: "1px solid #f5c6cb",
+    borderRadius: 8,
+    color: "#b71c1c",
+  },
+  aiPre: {
+    margin: 0,
+    fontFamily:
+      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    fontSize: 12,
+    lineHeight: 1.4,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+  },
 };
 
 export default EnergyOverview;
