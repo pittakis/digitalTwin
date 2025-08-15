@@ -256,59 +256,77 @@ export default function Dashboard() {
             <h1>Sensor Status</h1>
             <button style={styles.infoButton} onClick={() => setShowInstructions(prev => !prev)}><Info /></button>
           </div>
-{/* INFO */}
-{showInstructions && (
-  <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
-    <div style={styles.modal} onClick={e => e.stopPropagation()}>
-      <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
-        <h2>Indicators Info</h2>
-        <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}>
-          <CircleX />
-        </button>
-      </div>
+          {/* INFO */}
+          {showInstructions && (
+            <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
+              <div style={styles.modal} onClick={e => e.stopPropagation()}>
+                <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+                  <h2>Indicators Info</h2>
+                  <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}>
+                    <CircleX />
+                  </button>
+                </div>
 
-      {/* Legend */}
-      <div style={{ display: "flex", marginTop: "1rem", alignItems: "center" }}>
-        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
-        Sensor is Online (normal)
-      </div>
-      <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
-        Sensor has minor issues
-      </div>
-      <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-        <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
-        Sensor is Offline or has major issues
-      </div>
+                {/* Legend */}
+                                <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
+                  <strong>Room Indicators:</strong>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
+                  All sensors are Online (normal)
+                </div>
+                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
+                  At least one sensor has minor issues
+                </div>
+                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
+                  At least one sensor is Offline or has major issues
+                </div>
+                </div>
 
-      {/* Explanation */}
-      <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
-        <strong>How anomalies are detected:</strong>
-        <p>
-          The "Enable AI Features for Anomaly Detection" checkbox must be checked.
-        </p>
-        <ul style={{ paddingLeft: "1.2rem", margin: "0.5rem 0" }}>
-          <li>
-            We use an <em>Isolation Forest</em> model to learn typical sensor behavior. Each reading’s “anomaly score”
-            is based on how quickly it can be “isolated” in a random decision tree.
-          </li>
-          <li>
-            Scores &gt; 0 are considered normal. Scores &lt; 0 trigger a minor‐issue warning (yellow).
-            Points classified as outliers by the forest are flagged red.
-          </li>
-          <li>
-            In addition, we apply domain rules: 
-            <ul style={{ paddingLeft: "1rem" }}>
-              <li><code>ValvePosition</code> and <code>Battery</code> must be between 0–100%</li>
-              <li>Any values more than 3 σ from the mean across all same‐type sensors are also highlighted</li>
-            </ul>
-          </li>
-        </ul>
-        The <em>anomalous_features</em> list shows which checks were triggered for each sensor.
-      </div>
-    </div>
-  </div>
-)}
+                <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
+                  <strong>Sensor Indicators:</strong>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
+                  Sensor is Online (normal)
+                </div>
+                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
+                  Sensor has minor issues
+                </div>
+                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
+                  Sensor is Offline or has major issues
+                </div>
+                </div>
+                {/* Explanation */}
+                <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
+                  <strong>How anomalies are detected:</strong>
+                  <p>
+                    The "Enable AI Features for Anomaly Detection" checkbox must be checked.
+                  </p>
+                  <ul style={{ paddingLeft: "1.2rem", margin: "0.5rem 0" }}>
+                    <li>
+                      We use an <em>Isolation Forest</em> model to learn typical sensor behavior. Each reading’s “anomaly score”
+                      is based on how quickly it can be “isolated” in a random decision tree.
+                    </li>
+                    <li>
+                      Scores &gt; 0 are considered normal. Scores &lt; 0 trigger a minor‐issue warning (yellow).
+                      Points classified as outliers by the forest are flagged red.
+                    </li>
+                    <li>
+                      In addition, we apply domain rules:
+                      <ul style={{ paddingLeft: "1rem" }}>
+                        <li><code>ValvePosition</code> and <code>Battery</code> must be between 0–100%</li>
+                        <li>Any values more than 3 σ from the mean across all same‐type sensors are also highlighted</li>
+                      </ul>
+                    </li>
+                  </ul>
+                  The <em>anomalous_features</em> list shows which checks were triggered for each sensor.
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={styles.statusContainer}>
             <SensorStatusGrid
@@ -611,7 +629,7 @@ const styles = {
   },
   modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
   modal: { background: '#fff', borderRadius: '10px', padding: '1rem', maxWidth: '400px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', overflowY: 'auto', maxHeight: '80vh', position: 'relative' },
-    closeStatusButton: {
+  closeStatusButton: {
     position: "absolute",
     top: "0.2rem",             // distance from top of modal
     right: "0rem",           // distance from right of modal
@@ -623,6 +641,6 @@ const styles = {
     cursor: "pointer",
     fontSize: "1.2rem"
   },
-    infoButton: { padding: '0.9rem 0.2rem', backgroundColor: 'transparent', color: '#007bff', border: 'none', borderRadius: '100%', cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' },
+  infoButton: { padding: '0.9rem 0.2rem', backgroundColor: 'transparent', color: '#007bff', border: 'none', borderRadius: '100%', cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' },
 
 };
