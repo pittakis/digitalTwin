@@ -5,11 +5,12 @@ from pythermalcomfort.models import pmv_ppd_iso
 import paho.mqtt.client as mqtt
 import threading
 from db_utils import connect_to_db
+import os
 
-USERNAME = 'dtuser'
-PASSWORD = 'dtuserdtuser'
-BROKER = 'buildon.epu.ntua.gr'
-PORT = 1883
+USERNAME = os.getenv("MQTT_USERNAME")
+PASSWORD = os.getenv("MQTT_PASSWORD")
+BROKER = os.getenv("MQTT_BROKER")
+PORT = int(os.getenv("MQTT_PORT"))
 
 # PMV parameters]
 met = 1.1
