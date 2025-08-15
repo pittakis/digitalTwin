@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Fragment } from "react";
+import { Info, CircleX } from "lucide-react";
 
 function EnergyOverview() {
   const navigate = useNavigate();
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showInstructions, setShowInstructions] = useState(false);
+
 
   // sorting state
   const [sortKey, setSortKey] = useState("name");
@@ -196,7 +199,39 @@ function EnergyOverview() {
                           {aiError[r.id] && <div style={styles.aiError}>{aiError[r.id]}</div>}
                           {!aiLoading[r.id] && !aiError[r.id] && aiData[r.id] && (
                             <div style={styles.aiBox}>
-                              <h4 style={{ margin: "0 0 8px" }}>LSTM Predictions</h4>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                                <h4 style={{ margin: "0 0 8px" }}>LSTM Predictions</h4>
+                                <button style={styles.infoButton} onClick={() => setShowInstructions(prev => !prev)}><Info /></button>
+                              </div>
+                              {/* INFO */}
+                              {showInstructions && (
+                                <div style={styles.modalOverlay} onClick={() => setShowInstructions(false)}>
+                                  <div style={styles.modal} onClick={e => e.stopPropagation()}>
+                                    <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+                                      <h2>LSTM Info</h2>
+                                      <button onClick={() => setShowInstructions(false)} style={styles.closeStatusButton}>
+                                        <CircleX />
+                                      </button>
+                                    </div>
+
+                                    <div style={{ marginTop: "1rem", lineHeight: 1.55 }}>
+                                      <h3 style={{ margin: "0 0 8px" }}>What is LSTM forecasting?</h3>
+                                      <p>
+                                        An <strong>LSTM</strong> (Long Short-Term Memory) is a type of recurrent neural network that’s
+                                        built for time-series. It “remembers” recent patterns (seasonality, trends, abrupt changes) and
+                                        uses them to predict the next point(s) in the sequence.
+                                      </p>
+
+                                      <h4 style={{ margin: "12px 0 6px" }}>How we use it here</h4>
+                                      <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+                                        <li>Inputs: recent consumption (and other contextual features) window per energy meter.</li>
+                                        <li>Output: the next step <em>predicted_consumption</em>. We also compute a cost estimate using a tariff.</li>
+                                        <li>Refresh: the model is retrained periodically; forecasts update as new data arrives.</li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                               <div style={{ marginBottom: 8 }}>
                                 <div><strong>Predicted Consumption:</strong> {formatNumber(aiData[r.id].predicted_consumption, 3)}</div>
                                 <div><strong>Predicted Cost:</strong> {formatNumber(aiData[r.id].predicted_consumption * 0.15, 2)} € @ 0.15 €/kWh</div>
@@ -369,6 +404,21 @@ const styles = {
     lineHeight: 1.4,
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
+  },
+  infoButton: { padding: '0.9rem 0.2rem', backgroundColor: 'transparent', color: '#007bff', border: 'none', borderRadius: '100%', cursor: 'pointer', fontSize: '1rem', marginLeft: '0.5rem' },
+  modalOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
+  modal: { background: '#fff', borderRadius: '10px', padding: '1rem', maxWidth: '400px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', overflowY: 'auto', maxHeight: '80vh', position: 'relative' },
+  closeStatusButton: {
+    position: "absolute",
+    top: "0.2rem",             // distance from top of modal
+    right: "0rem",           // distance from right of modal
+    padding: "0.2rem",
+    backgroundColor: "transparent",
+    color: "#f00",
+    border: "none",
+    borderRadius: "50%",
+    cursor: "pointer",
+    fontSize: "1.2rem"
   },
 };
 
