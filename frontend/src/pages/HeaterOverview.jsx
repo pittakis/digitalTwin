@@ -272,7 +272,7 @@ const styles = {
   headerTitle: {
     margin: 0,
     fontSize: "1.6rem",
-    color: "#d9534f",
+    color: "#000000ff",
     textAlign: "center",
     flex: 1,
   },
@@ -314,9 +314,9 @@ const styles = {
     overflow: "hidden",
   },
   th: {
-    backgroundColor: "#fdecea",
+    backgroundColor: "#f0f4f8",
     padding: "0.75rem",
-    borderBottom: "1px solid #f5c6cb",
+    borderBottom: "1px solid #ddd",
     textAlign: "center",
     whiteSpace: "nowrap",
   },
