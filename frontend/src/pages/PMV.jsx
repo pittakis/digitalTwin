@@ -91,26 +91,26 @@ export default function PMV() {
         </button>
         <h2 style={styles.title}>📋 PMV Sensor List</h2>
       </div>
-        {/* Controls */}
-        <div style={styles.controls}>
-          <button
-            onClick={() => setShowColors(prev => !prev)}
-            style={{
-              ...styles.toggleRealtimeBtn,
-              backgroundColor: showColors ? "#28a745" : "#6c757d",
-            }}
-          >
-            {showColors ? "Row Colors ON" : "Row Colors OFF"}
-          </button>
+      {/* Controls */}
+      <div style={styles.controls}>
+        <button
+          onClick={() => setShowColors(prev => !prev)}
+          style={{
+            ...styles.toggleRealtimeBtn,
+            backgroundColor: showColors ? "#28a745" : "#6c757d",
+          }}
+        >
+          {showColors ? "Row Colors ON" : "Row Colors OFF"}
+        </button>
 
-          {params && (
-            <div style={styles.badges}>
-              <span style={styles.badge}>Metabolic Rate: {params.met.toFixed(2)} met</span>
-              <span style={styles.badge}>Clothing Insulation: {params.clo.toFixed(2)} clo</span>
-              <span style={styles.badge}>Air Velocity: {params.v_air.toFixed(2)} m/s</span>
-            </div>
-          )}
-        </div>
+        {params && (
+          <div style={styles.badges}>
+            <span style={styles.badge}>Metabolic Rate: {params.met.toFixed(2)} met</span>
+            <span style={styles.badge}>Clothing Insulation: {params.clo.toFixed(2)} clo</span>
+            <span style={styles.badge}>Air Velocity: {params.v_air.toFixed(2)} m/s</span>
+          </div>
+        )}
+      </div>
       {/* Scrollable content */}
       <div style={styles.scrollArea}>
         {error && <p style={styles.error}>{error}</p>}

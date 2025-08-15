@@ -52,12 +52,12 @@ function HeaterOverview() {
     const q = search.trim().toLowerCase();
     const filtered = q
       ? list.filter(r =>
-          [
-            r.id, r.name,
-            r.valve, r.target, r.temp, r.battery, r.gap,
-            r.timestamp ? r.timestamp.toLocaleString() : ""
-          ].join(" ").toLowerCase().includes(q)
-        )
+        [
+          r.id, r.name,
+          r.valve, r.target, r.temp, r.battery, r.gap,
+          r.timestamp ? r.timestamp.toLocaleString() : ""
+        ].join(" ").toLowerCase().includes(q)
+      )
       : list;
 
     const dir = sort.dir === "asc" ? 1 : -1;
@@ -126,8 +126,8 @@ function HeaterOverview() {
       highlightNulls &&
       colorMode !== "off" &&
       ((colorMode === "gap" && r.gap == null) ||
-       (colorMode === "valve" && r.valve == null) ||
-       (colorMode === "battery" && r.battery == null));
+        (colorMode === "valve" && r.valve == null) ||
+        (colorMode === "battery" && r.battery == null));
 
     return {
       ...(bg ? { backgroundColor: bg } : {}),
@@ -147,60 +147,60 @@ function HeaterOverview() {
         <h2 style={styles.headerTitle}>🔥 Heater Sensors Overview</h2>
       </div>
       <div style={styles.controls}>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by ID, name, values…"
-            style={styles.search}
-          />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by ID, name, values…"
+          style={styles.search}
+        />
 
-          {/* Color mode buttons (mutually exclusive) */}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <button
-              onClick={() => toggleMode("gap")}
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: colorMode === "gap" ? "#28a745" : "#6c757d",
-              }}
-              title="Color rows by temperature gap"
-            >
-              Gap
-            </button>
-            <button
-              onClick={() => toggleMode("valve")}
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: colorMode === "valve" ? "#28a745" : "#6c757d",
-              }}
-              title="Color rows by valve position"
-            >
-              Valve
-            </button>
-            <button
-              onClick={() => toggleMode("battery")}
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: colorMode === "battery" ? "#28a745" : "#6c757d",
-              }}
-              title="Color rows by battery"
-            >
-              Battery
-            </button>
+        {/* Color mode buttons (mutually exclusive) */}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            onClick={() => toggleMode("gap")}
+            style={{
+              ...styles.toggleBtn,
+              backgroundColor: colorMode === "gap" ? "#28a745" : "#6c757d",
+            }}
+            title="Color rows by temperature gap"
+          >
+            Gap
+          </button>
+          <button
+            onClick={() => toggleMode("valve")}
+            style={{
+              ...styles.toggleBtn,
+              backgroundColor: colorMode === "valve" ? "#28a745" : "#6c757d",
+            }}
+            title="Color rows by valve position"
+          >
+            Valve
+          </button>
+          <button
+            onClick={() => toggleMode("battery")}
+            style={{
+              ...styles.toggleBtn,
+              backgroundColor: colorMode === "battery" ? "#28a745" : "#6c757d",
+            }}
+            title="Color rows by battery"
+          >
+            Battery
+          </button>
 
-            {/* Highlight nulls */}
-            <button
-              onClick={() => setHighlightNulls((p) => !p)}
-              style={{
-                ...styles.toggleBtn,
-                backgroundColor: highlightNulls ? "#28a745" : "#6c757d",
-              }}
-              title="Neutral highlight for missing values in the active metric"
-            >
-              Highlight Nulls
-            </button>
-          </div>
+          {/* Highlight nulls */}
+          <button
+            onClick={() => setHighlightNulls((p) => !p)}
+            style={{
+              ...styles.toggleBtn,
+              backgroundColor: highlightNulls ? "#28a745" : "#6c757d",
+            }}
+            title="Neutral highlight for missing values in the active metric"
+          >
+            Highlight Nulls
+          </button>
         </div>
+      </div>
 
       {/* Scrollable content */}
       <div style={styles.scrollArea}>

@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { CircleX } from 'lucide-react';
-import axios from 'axios';
+
+// icon URL
+const iconUrl = '/ai_assistant.png';
 
 // 1. Create ChatContext
 const ChatContext = createContext({
   open: false,
   messages: [],
-  addMessage: () => {},
-  toggleOpen: () => {}
+  addMessage: () => { },
+  toggleOpen: () => { }
 });
 
 // 2. ChatProvider wraps the app, persists history
@@ -44,7 +45,7 @@ export default function ChatWidget() {
   const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  
+
   useEffect(() => {
     if (open && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -54,7 +55,7 @@ export default function ChatWidget() {
   // Draggable position state
   const [pos, setPos] = useState(() => ({
     x: window.innerWidth - 80,
-    y: window.innerHeight - 80
+    y: window.innerHeight - window.innerHeight * 0.07 - 80
   }));
   const dragging = useRef(false);
   const moved = useRef(false);
@@ -133,6 +134,7 @@ export default function ChatWidget() {
     <>
       {/* Draggable AI button */}
       <button
+        aria-label="Open AI assistant"
         onClick={handleClick}
         onMouseDown={onMouseDown}
         style={{
@@ -142,36 +144,38 @@ export default function ChatWidget() {
           width: 56,
           height: 56,
           borderRadius: '50%',
-          background: '#2980b9',
-          color: '#fff',
+          backgroundImage: `url(${iconUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: 'transparent',
           border: 'none',
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           cursor: dragging.current ? 'grabbing' : 'grab',
-          fontSize: '1.5rem',
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           userSelect: 'none'
         }}
-      >🤖</button>
+      />
 
       {/* Chat panel */}
       {open && (
-        <div style={panelStyle} onClick ={() => setShowMenu(false)}>
+        <div style={panelStyle} onClick={() => setShowMenu(false)}>
           {/* Header */}
           <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
             <strong>AI Assistant</strong>
             <button onClick={() => setShowMenu(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer' }} >
               {/* Three dots icon */}
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M3 9.5A1.5 1.5 0 1 1 3 6.5a1.5 1.5 0 0 1 0 3zm5 0A1.5 1.5 0 1 1 8 6.5a1.5 1.5 0 0 1 0 3zm5 0A1.5 1.5 0 1 1 13 6.5a1.5 1.5 0 0 1 0 3z"/>
+                <path d="M3 9.5A1.5 1.5 0 1 1 3 6.5a1.5 1.5 0 0 1 0 3zm5 0A1.5 1.5 0 1 1 8 6.5a1.5 1.5 0 0 1 0 3zm5 0A1.5 1.5 0 1 1 13 6.5a1.5 1.5 0 0 1 0 3z" />
               </svg>
             </button>
             {showMenu && (
               <div style={{ position: 'absolute', top: '2.5rem', right: '0.5rem', background: '#fff', border: '1px solid #ccc', borderRadius: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                <button onClick={() => { clearMessages(); setShowMenu(false);} } style={{ border:'none', borderBottom: '1px solid #ccc', display: 'block', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer' }}>Clear</button>
-                <button onClick={() => { toggleOpen(); setShowMenu(false);} } style={{ border:'none', borderBottom: '1px solid #ccc', display: 'block', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer' }}>Close</button>
+                <button onClick={() => { clearMessages(); setShowMenu(false); }} style={{ border: 'none', borderBottom: '1px solid #ccc', display: 'block', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer' }}>Clear</button>
+                <button onClick={() => { toggleOpen(); setShowMenu(false); }} style={{ border: 'none', borderBottom: '1px solid #ccc', display: 'block', padding: '0.5rem 1rem', width: '100%', textAlign: 'left', background: 'none', cursor: 'pointer' }}>Close</button>
               </div>
             )}
           </div>
@@ -185,7 +189,7 @@ export default function ChatWidget() {
                 </span>
               </div>
             ))}
-             <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input box */}

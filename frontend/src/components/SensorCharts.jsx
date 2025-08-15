@@ -1,13 +1,4 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  CartesianGrid,
-  ResponsiveContainer
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -69,7 +60,7 @@ function SensorChart({ sensorId }) {
     <div>
       <h3>Data Charts</h3>
       <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-        
+
         {/* Slot 1 */}
         <div style={{ flex: 1, minWidth: "300px" }}>
           <label>

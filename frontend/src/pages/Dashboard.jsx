@@ -5,6 +5,8 @@ import SensorStatusGrid from "../components/SensorStatusGrid";
 import { CircleX, Info } from 'lucide-react';
 import SensorChart from "../components/SensorCharts";
 
+const aiIconUrl = '/ai_assistant.png';
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [forecast, setForecast] = useState(null);
@@ -219,9 +221,26 @@ export default function Dashboard() {
           </button>
         </div>
         <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label htmlFor="ai-toggle" style={{ color: "#fff", cursor: "pointer" }}>
-            🤖 Enable AI Features for Anomaly Detection
+          <label
+            htmlFor="ai-toggle"
+            style={{ color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <img
+              src={aiIconUrl}
+              alt=""
+              aria-hidden="true"
+              width={25}
+              height={25}
+              style={{
+                display: 'block',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                background: 'white'
+              }}
+            />
+            <span>Enable AI Features for Anomaly Detection</span>
           </label>
+
           <input
             id="ai-toggle"
             type="checkbox"
@@ -268,36 +287,36 @@ export default function Dashboard() {
                 </div>
 
                 {/* Legend */}
-                                <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
+                <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
                   <strong>Room Indicators:</strong>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
-                  All sensors are Online (normal)
-                </div>
-                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
-                  At least one sensor has minor issues
-                </div>
-                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
-                  At least one sensor is Offline or has major issues
-                </div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
+                    All sensors are Online (normal)
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
+                    At least one sensor has minor issues
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
+                    At least one sensor is Offline or has major issues
+                  </div>
                 </div>
 
                 <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
                   <strong>Sensor Indicators:</strong>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
-                  Sensor is Online (normal)
-                </div>
-                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
-                  Sensor has minor issues
-                </div>
-                <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
-                  <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
-                  Sensor is Offline or has major issues
-                </div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "green", marginRight: 8 }} />
+                    Sensor is Online (normal)
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "yellow", marginRight: 8 }} />
+                    Sensor has minor issues
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", marginTop: 4 }}>
+                    <div style={{ width: 13, height: 13, borderRadius: "50%", background: "red", marginRight: 8 }} />
+                    Sensor is Offline or has major issues
+                  </div>
                 </div>
                 {/* Explanation */}
                 <div style={{ marginTop: "1rem", lineHeight: 1.5 }}>
