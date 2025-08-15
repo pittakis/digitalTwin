@@ -148,7 +148,7 @@ export default function ChatWidget() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          backgroundColor: 'transparent',
+          backgroundColor: 'white',
           border: 'none',
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           cursor: dragging.current ? 'grabbing' : 'grab',

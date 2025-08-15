@@ -295,7 +295,7 @@ const styles = {
     width: "100%",
     maxWidth: "420px",
     fontSize: "1rem",
-    margin: "1rem 2rem",
+    margin: "1rem 0rem",
     borderRadius: "6px",
     border: "1px solid #ccc",
   },

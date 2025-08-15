@@ -255,10 +255,10 @@ const styles = {
     flexDirection: "column",
     height: "100vh",
     fontFamily: "Segoe UI, sans-serif",
-    background: "#f7f8fa",
+    //background: "#f7f8fa",
   },
   header: {
-    flex: "0 0 auto",
+    //flex: "0 0 auto",
     display: "flex",
     alignItems: "center",
     gap: "1rem",
@@ -271,8 +271,7 @@ const styles = {
   },
   headerTitle: {
     margin: 0,
-    fontSize: "1.6rem",
-    color: "#000000ff",
+    fontSize: "1.5rem",
     textAlign: "center",
     flex: 1,
   },
