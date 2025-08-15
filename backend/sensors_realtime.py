@@ -87,7 +87,7 @@ def categorize_device(equipment_id):
     return None
 
 def on_connect(client, userdata, flags, rc):
-    print(f"🔌 MQTT Connected in sensors_realtime (rc={rc})")
+    print(f"MQTT Connected in sensors_realtime (rc={rc})")
     client.subscribe("#")
 
 def on_message(client, userdata, msg):
@@ -99,7 +99,6 @@ def on_message(client, userdata, msg):
 
         timestamp = data.get("Timestamp")
         measurements = data.get("Measurements", [])
-        #print(f"📡 Received data from {msg.topic}: {data}")
         if not timestamp or not measurements:
             return
 
@@ -114,7 +113,7 @@ def on_message(client, userdata, msg):
             add_sensor_data_to_db(equipment_id, timestamp, values)
 
     except Exception as e:
-        print(f"⚠️ MQTT error: {e}")
+        print(f"MQTT error: {e}")
 
 def mqtt_loop():
     try:
@@ -125,7 +124,7 @@ def mqtt_loop():
         client.connect(BROKER, PORT, 60)
         client.loop_forever()
     except Exception as e:
-        print(f"⚠️ MQTT connection error: {e}")
+        print(f"MQTT connection error: {e}")
 
 def run_sensor_listener():
     get_sensor_ids()

@@ -19,7 +19,7 @@ class MessageRequest(BaseModel):
 async def getAIResponse(
     payload: MessageRequest
 ):
-    print(f"Received message: {payload.message}")
+    # print(f"Received message: {payload.message}")
     try:
         # call ChatGPT
         response = client.responses.create(
@@ -27,7 +27,7 @@ async def getAIResponse(
             input="You are an AI assistant. Your response should be very short. Answer the following question only if it is related to sensors or digital twin: " + payload.message      
             )
         reply = response.output_text
-        print(f"AI response: {reply}")
+        # print(f"AI response: {reply}")
         return {"response": reply}
 
     except Exception as e:
@@ -37,14 +37,14 @@ async def getAIResponse(
 @router.get("/aiTest")
 async def aiTest():
     try:
-        print("Calling AI service...")
+        # print("Calling AI service...")
         # call ChatGPT
         response = client.responses.create(
             model="gpt-3.5-turbo",
             input="Translate the below text to Hindi. Text: \"\"\"I work at Geeks for Geeks \"\"\""        
             )
         reply = response.output_text
-        print(f"AI response: {reply}")
+        # print(f"AI response: {reply}")
         return {"response": reply}
 
     except Exception as e:
