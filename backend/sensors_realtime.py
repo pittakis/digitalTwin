@@ -12,12 +12,6 @@ PASSWORD = os.getenv("MQTT_PASSWORD")
 BROKER = os.getenv("MQTT_BROKER")
 PORT = int(os.getenv("MQTT_PORT"))
 
-# PMV parameters]
-met = 1.1
-clo = 0.5
-v_air = 0.1
-latest_pmv_data = {}
-
 # === Device Categories by Prefix ===
 AIR_QUALITY_IDS = set()
 ENERGY_METER_IDS = set()

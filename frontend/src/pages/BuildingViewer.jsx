@@ -49,7 +49,7 @@ const BuildingViewer = () => {
 
   // ----- Fetch sensors once -----
   useEffect(() => {
-    axios.get('http://localhost:7781/api/getSensorNames')
+    axios.get('http://localhost:7781/api/v1/getSensorNames')
       .then(res => {
         // API returns: [ [name, floor], ... ]
         const parsed = Array.isArray(res.data)
@@ -266,7 +266,7 @@ const BuildingViewer = () => {
       if (selectedNameRef.current === name) {
         resetHighlights(); setSelectedSensor(null); setSelectedName('none'); selectedNameRef.current = 'none'; return;
       }
-      const res = await axios.get(`http://localhost:7781/api/getSensorData/${name}`);
+      const res = await axios.get(`http://localhost:7781/api/v1/getSensorData/${name}`);
       setSelectedSensor(res.data);
 
       // Try exact, prefixed, then traverse by base name

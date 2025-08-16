@@ -7,7 +7,7 @@ from ai.LSTM import LSTM_helper
 from typing import Dict, Any
 from datetime import datetime, timezone
 
-router = APIRouter()
+router = APIRouter(tags=["EnergySensors"])
 
 @router.get("/energy")
 def get_all_energy_data():

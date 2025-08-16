@@ -8,7 +8,7 @@ from db_utils import connect_to_db
 SECRET_KEY = "to_pio_mistiko_klidi_7777"
 ALGORITHM = "HS256"
 
-router = APIRouter()
+router = APIRouter(tags=["Authentication"])
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):

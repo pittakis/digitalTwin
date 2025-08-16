@@ -9,7 +9,7 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
 
   useEffect(() => {
     axios
-      .get("http://localhost:7781/api/sensor/status/" + aiEnabled)
+      .get(`http://localhost:7781/api/v1/sensor/status/${aiEnabled}`)
       .then(({ data }) => setStatuses(data))
       .catch(() => setError("Failed to load sensor statuses"));
   }, [aiEnabled]);

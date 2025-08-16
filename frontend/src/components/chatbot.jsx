@@ -102,7 +102,7 @@ export default function ChatWidget() {
     setLoading(true);
 
     try {
-      const resp = await fetch(`http://localhost:7781/api/getAIResponse`, {
+      const resp = await fetch(`http://localhost:7781/api/v1/getAIResponse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text })

@@ -3,7 +3,7 @@ from db_utils import connect_to_db
 from datetime import datetime, timedelta
 from ai.ai_features import detect_anomalies, getStatus
 
-router = APIRouter()
+router = APIRouter(tags=["Sensors"])
 
 def fetch_data_as_dict(cursor, query):
     cursor.execute(query)

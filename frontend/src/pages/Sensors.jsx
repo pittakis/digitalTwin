@@ -12,7 +12,7 @@ function Sensors() {
 
   const fetchSensors = async () => {
     try {
-      const res = await axios.get("http://localhost:7781/api/sensors");
+      const res = await axios.get("http://localhost:7781/api/v1/sensors");
       setSensorData(res.data); // { AirQuality:[...], Heater:[...], EnergyMeter:[...] }
     } catch (err) {
       console.error("Sensor fetch failed", err);

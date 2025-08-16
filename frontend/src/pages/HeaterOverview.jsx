@@ -14,7 +14,7 @@ function HeaterOverview() {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:7781/api/heater");
+      const res = await axios.get("http://localhost:7781/api/v1/heater");
       setData(res.data);
       setError(null);
     } catch (err) {

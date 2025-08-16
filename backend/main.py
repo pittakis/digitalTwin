@@ -7,8 +7,6 @@ from routers.pmv import router as pmv_router
 from routers.sensors import router as sensor_router
 from routers.energy import router as energy_router
 from routers.heater import router as heater_router
-from routers.model3d import router as model3d_router
-from routers.upload import router as upload_router
 from routers.chat import router as getAIResponse
 
 #from pmv_realtime import run_mqtt_listener as run_pmv_listener, latest_pmv_data
@@ -26,14 +24,12 @@ app.add_middleware(
 )
 
 # Routes
-app.include_router(auth_router, prefix="/api")
-app.include_router(pmv_router, prefix="/api")
-app.include_router(sensor_router, prefix="/api")
-app.include_router(energy_router, prefix="/api")
-app.include_router(heater_router, prefix="/api")
-app.include_router(model3d_router, prefix="/api")
-app.include_router(upload_router, prefix="/api")
-app.include_router(getAIResponse, prefix="/api")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(pmv_router, prefix="/api/v1")
+app.include_router(sensor_router, prefix="/api/v1")
+app.include_router(energy_router, prefix="/api/v1")
+app.include_router(heater_router, prefix="/api/v1")
+app.include_router(getAIResponse, prefix="/api/v1")
 
 # Start MQTT listener
 #run_pmv_listener()

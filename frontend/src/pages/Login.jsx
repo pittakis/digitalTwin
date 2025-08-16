@@ -11,7 +11,7 @@ function Login() {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:7781/api/login", new URLSearchParams({
+      const res = await axios.post("http://localhost:7781/api/v1/login", new URLSearchParams({
         username,
         password
       }));

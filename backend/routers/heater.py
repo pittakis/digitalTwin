@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException
 from db_utils import connect_to_db
 
-router = APIRouter()
+router = APIRouter(tags=["HeaterSensors"])
 
 @router.get("/heater")
 def get_heater_data():

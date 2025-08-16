@@ -5,7 +5,7 @@ import os
 from openai import OpenAI
 client = OpenAI()
 
-router = APIRouter()
+router = APIRouter(tags=["AIAssistant"])
 
 client.api_key = os.getenv("OPENAI_API_KEY")
 if not client.api_key:
@@ -34,8 +34,8 @@ async def getAIResponse(
         # handle errors
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/aiTest")
-async def aiTest():
+@router.get("/aiHealthCheck")
+async def aiHealthCheck():
     try:
         # print("Calling AI service...")
         # call ChatGPT

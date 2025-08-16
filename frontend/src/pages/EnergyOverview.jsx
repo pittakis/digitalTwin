@@ -24,7 +24,7 @@ function EnergyOverview() {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:7781/api/energy");
+      const res = await axios.get("http://localhost:7781/api/v1/energy");
       setData(res.data || {});
       setError(null);
     } catch {
@@ -109,7 +109,7 @@ function EnergyOverview() {
       try {
         setAiLoading((p) => ({ ...p, [row.id]: true }));
         setAiError((p) => ({ ...p, [row.id]: null }));
-        const res = await axios.get(`http://localhost:7781/api/energy/ai/${encodeURIComponent(row.id)}`);
+        const res = await axios.get(`http://localhost:7781/api/v1/energy/ai/${encodeURIComponent(row.id)}`);
         setAiData((p) => ({ ...p, [row.id]: res.data }));
       } catch (e) {
         setAiError((p) => ({ ...p, [row.id]: "Failed to fetch AI results" }));

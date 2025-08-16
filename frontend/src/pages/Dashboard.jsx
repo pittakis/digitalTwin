@@ -66,7 +66,7 @@ export default function Dashboard() {
     if (!params) return;
     const fetchPmv = () => {
       axios
-        .get("http://127.0.0.1:7781/api/pmv", { params })
+        .get("http://127.0.0.1:7781/api/v1/pmv", { params })
         .then(res => {
           const notes = res.data
             .filter(s => s.status !== "Comfortable")
@@ -93,7 +93,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchHeater = () => {
       axios
-        .get("http://127.0.0.1:7781/api/getSensorNotifications")
+        .get("http://127.0.0.1:7781/api/v1/getSensorNotifications")
         .then(res => {
           const notes = res.data.flatMap(([id, name, , , tgt, tmp, bat]) => {
             const a = [];
@@ -133,7 +133,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchEnergy = () => {
       axios
-        .get("http://127.0.0.1:7781/api/energy/notifications")
+        .get("http://127.0.0.1:7781/api/v1/energy/notifications")
         .then(res => {
           const notes = res.data.map(n => ({
             id: n.id,
