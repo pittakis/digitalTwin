@@ -29,12 +29,13 @@ def get_all_sensor_data():
 def get_sensor_names():
     sensor_names = []
     conn = connect_to_db()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT name, floor FROM sensors ORDER BY floor, name")
-        sensors = cursor.fetchall()
-        cursor.close()
-        conn.close()
+    if not conn:
+        raise HTTPException(status_code=403, detail="Database connection failed")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, floor FROM sensors ORDER BY floor, name")
+    sensors = cursor.fetchall()
+    cursor.close()
+    conn.close()
     if not sensors:
         raise HTTPException(status_code=404, detail="No sensors found")
     return sensors
@@ -43,7 +44,7 @@ def get_sensor_names():
 def get_sensor_data(sensor_name: str):
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
     
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM sensors WHERE name = %s", (sensor_name,))
@@ -62,11 +63,12 @@ def get_sensor_data(sensor_name: str):
 def get_sensor_notifications():
     notifications = []
     conn = connect_to_db()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT DISTINCT ON (s.id)
-                s.id,
+    if not conn:
+        raise HTTPException(status_code=403, detail="Database connection failed")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT ON (s.id)
+            s.id,
                 s.name,
                 s.last_updated   AS timestamp,
                 (s.latest_data->>'ValvePosition')::INT        AS valve_position,
@@ -85,12 +87,12 @@ def get_sensor_notifications():
                 s.id,
                 s.last_updated DESC;
         """)
-        notifications = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        if not notifications:
-            return []
-        return notifications
+    notifications = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if not notifications:
+        return []
+    return notifications
     
 @router.get("/sensor/status/{ai_enabled}")
 async def get_sensor_status(ai_enabled: bool = False):
@@ -99,7 +101,7 @@ async def get_sensor_status(ai_enabled: bool = False):
     if ai_enabled:
         conn = connect_to_db()
         if not conn:
-            raise HTTPException(500, "Database connection failed")
+            raise HTTPException(status_code=403, detail="Database connection failed")
         cursor = conn.cursor()
         cursor.execute("""
             SELECT * 
@@ -121,7 +123,7 @@ async def get_sensor_status(ai_enabled: bool = False):
     # Now do your normal fetch for allSensors
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(500, "Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
@@ -142,6 +144,9 @@ async def get_sensor_status(ai_enabled: bool = False):
     cursor.close()
     conn.close()
 
+    if not rows:
+        raise HTTPException(status_code=404, detail="No sensors found")
+    
     now = datetime.now()
     allSensors = []
 
@@ -206,7 +211,7 @@ async def get_sensor_status(ai_enabled: bool = False):
 async def get_sensor_history(sensor_id: str):
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
     
     cursor = conn.cursor()
     cursor.execute("""

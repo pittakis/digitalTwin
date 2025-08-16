@@ -13,12 +13,13 @@ router = APIRouter(tags=["Authentication"])
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     conn = connect_to_db()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = %s", (form_data.username,))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
+    if not conn:
+        raise HTTPException(status_code=403, detail="Database connection failed")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = %s", (form_data.username,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
     if form_data.username != user[1] or form_data.password != user[2]:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

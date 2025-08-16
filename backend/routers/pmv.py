@@ -22,7 +22,7 @@ def get_pmv(
     """
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
 
     cursor = conn.cursor()
     # Cast JSON fields to float directly in SQL
@@ -47,7 +47,7 @@ def get_pmv(
 
     # Return empty list if no data
     if not rows:
-        return []
+        raise HTTPException(status_code=404, detail="No AirQuality sensors found")
 
     results = []
     for sensor_id, name, timestamp, temperature, humidity in rows:

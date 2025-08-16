@@ -32,7 +32,7 @@ async def getAIResponse(
 
     except Exception as e:
         # handle errors
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=402, detail=str(e))
 
 @router.get("/aiHealthCheck")
 async def aiHealthCheck():
@@ -49,4 +49,4 @@ async def aiHealthCheck():
 
     except Exception as e:
         # handle errors
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=402, detail=str(e))

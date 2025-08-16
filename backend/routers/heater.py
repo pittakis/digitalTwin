@@ -8,7 +8,7 @@ router = APIRouter(tags=["HeaterSensors"])
 def get_heater_data():
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
 
     cursor = conn.cursor()
 

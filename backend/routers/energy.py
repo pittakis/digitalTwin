@@ -13,7 +13,7 @@ router = APIRouter(tags=["EnergySensors"])
 def get_all_energy_data():
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
 
     cursor = conn.cursor()
     cursor.execute("""
@@ -152,7 +152,7 @@ def predict_energy_next(sensor_id: str):
     # Fetch last 20 rows (newest first), then pass to helper
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=403, detail="Database connection failed")
     cur = conn.cursor()
     cur.execute(
                     """
@@ -181,7 +181,7 @@ def predict_energy_next(sensor_id: str):
 def get_energy_notifications():
     conn = connect_to_db()
     if not conn:
-        raise HTTPException(500, "Database connection failed")
+        raise HTTPException(403, "Database connection failed")
     cur = conn.cursor()
     cur.execute("""
         SELECT
