@@ -20,6 +20,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = cursor.fetchone()
     cursor.close()
     conn.close()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     if form_data.username != user[1] or form_data.password != user[2]:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
