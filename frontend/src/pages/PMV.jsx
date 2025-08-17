@@ -77,7 +77,13 @@ export default function PMV() {
   // Fetch PMV once with computed params
   useEffect(() => {
     if (!params) return;
-    axios.get("http://localhost:7781/api/v1/pmv", { params })
+    const token = sessionStorage.getItem("token");
+    axios.get("http://localhost:7781/api/v1/pmv", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params
+    })
       .then(res => setPmvData(res.data))
       .catch(() => setError("Failed to fetch PMV data"));
   }, [params]);

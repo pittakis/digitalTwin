@@ -1,11 +1,12 @@
 # backend/routers/energy.py
-from fastapi import APIRouter, HTTPException
-from db_utils import connect_to_db
+from fastapi import APIRouter, HTTPException, Depends
+from utils.security import get_current_user
+from utils.db_utils import connect_to_db
 
 router = APIRouter(tags=["HeaterSensors"])
 
 @router.get("/heater")
-def get_heater_data():
+def get_heater_data(current_user: str = Depends(get_current_user)):
     conn = connect_to_db()
     if not conn:
         raise HTTPException(status_code=403, detail="Database connection failed")

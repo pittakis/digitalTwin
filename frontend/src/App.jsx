@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PMV from "./pages/PMV";
@@ -9,21 +9,27 @@ import Building3D from "./pages/BuildingViewer";
 import FloorPlan from "./pages/FloorPlan";
 import { ChatProvider } from "./components/chatbot";
 import ChatWidget from "./components/chatbot";
+import RequireAuth from "./RequireAuth";
 
 function App() {
+  const location = useLocation();
+  const hasToken = !!sessionStorage.getItem("token");
+  const showChat = hasToken && location.pathname !== '/';
   return (
     <ChatProvider>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/pmv" element={<PMV />} />
-        <Route path="/sensors" element={<Sensors />} />
-        <Route path="/energy-overview" element={<EnergyOverview />} />
-        <Route path="/heater-overview" element={<HeaterOverview />} />
-        <Route path="/floorplan" element={<FloorPlan />} />
-        <Route path="/building-3d/:floor" element={<Building3D />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/pmv" element={<PMV />} />
+          <Route path="/sensors" element={<Sensors />} />
+          <Route path="/energy-overview" element={<EnergyOverview />} />
+          <Route path="/heater-overview" element={<HeaterOverview />} />
+          <Route path="/floorplan" element={<FloorPlan />} />
+          <Route path="/building-3d/:floor" element={<Building3D />} />
+        </Route>
       </Routes>
-      {location.pathname !== '/' && <ChatWidget />}
+      {showChat && <ChatWidget />}
     </ChatProvider>
   );
 }

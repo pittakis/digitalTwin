@@ -1,25 +1,44 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE = "http://localhost:7781/api/v1"; // adjust to your backend (e.g. /api/v1/auth/login)
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:7781/api/v1/login", new URLSearchParams({
-        username,
-        password
-      }));
-      localStorage.setItem("token", res.data.access_token);
-      alert("Login successful");
-      window.location.href = "/dashboard"; // Replace with your actual route
+      const body = new URLSearchParams();
+      body.append("username", username);
+      body.append("password", password);
+
+      // If your FastAPI route is /api/v1/auth/login change to `${API_BASE}/auth/login`
+      const res = await axios.post(`${API_BASE}/login`, body, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+
+      const token = res.data && res.data.access_token;
+      if (!token) throw new Error("No token in response");
+
+      sessionStorage.setItem("token", token);
+      navigate("/dashboard");
     } catch (err) {
-      setError("Invalid credentials. Please try again.");
+      const detail =
+        (err.response && err.response.data && err.response.data.detail) ||
+        err.message ||
+        "Invalid credentials. Please try again.";
+      setError(detail);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -27,12 +46,13 @@ function Login() {
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.form}>
         <h2 style={styles.title}>Login</h2>
-        {error && <p style={styles.error}>{error}</p>}
+        {error ? <p style={styles.error}>{error}</p> : null}
         <input
           style={styles.input}
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          autoComplete="username"
         />
         <input
           type="password"
@@ -40,8 +60,11 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
         />
-        <button type="submit" style={styles.button}>Login</button>
+        <button type="submit" style={styles.button} disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );

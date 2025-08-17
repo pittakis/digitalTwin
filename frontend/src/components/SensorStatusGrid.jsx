@@ -8,8 +8,13 @@ export default function SensorStatusGrid({ onSelect, aiEnabled }) {
   const [selectedSensor, setSelectedSensor] = useState(null);
 
   useEffect(() => {
+    const token = sessionStorage.getItem("token");
     axios
-      .get(`http://localhost:7781/api/v1/sensor/status/${aiEnabled}`)
+      .get(`http://localhost:7781/api/v1/sensor/status/${aiEnabled}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then(({ data }) => setStatuses(data))
       .catch(() => setError("Failed to load sensor statuses"));
   }, [aiEnabled]);

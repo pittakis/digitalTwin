@@ -4,6 +4,7 @@ import axios from "axios";
 import SensorStatusGrid from "../components/SensorStatusGrid";
 import { CircleX, Info } from 'lucide-react';
 import SensorChart from "../components/SensorCharts";
+import logout from "../components/logout";
 
 const aiIconUrl = '/ai_assistant.png';
 
@@ -64,9 +65,10 @@ export default function Dashboard() {
   // PMV notifications
   useEffect(() => {
     if (!params) return;
+    const token = sessionStorage.getItem("token");
     const fetchPmv = () => {
       axios
-        .get("http://127.0.0.1:7781/api/v1/pmv", { params })
+        .get("http://localhost:7781/api/v1/pmv", { params, headers: { Authorization: `Bearer ${token}` } })
         .then(res => {
           const notes = res.data
             .filter(s => s.status !== "Comfortable")
@@ -91,9 +93,12 @@ export default function Dashboard() {
 
   // Heater notifications
   useEffect(() => {
+    const token = sessionStorage.getItem("token");
     const fetchHeater = () => {
       axios
-        .get("http://127.0.0.1:7781/api/v1/getSensorNotifications")
+        .get("http://localhost:7781/api/v1/getSensorNotifications", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         .then(res => {
           const notes = res.data.flatMap(([id, name, , , tgt, tmp, bat]) => {
             const a = [];
@@ -131,9 +136,12 @@ export default function Dashboard() {
 
   // Energy notifications
   useEffect(() => {
+    const token = sessionStorage.getItem("token");
     const fetchEnergy = () => {
       axios
-        .get("http://127.0.0.1:7781/api/v1/energy/notifications")
+        .get("http://localhost:7781/api/v1/energy/notifications", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         .then(res => {
           const notes = res.data.map(n => ({
             id: n.id,
@@ -266,6 +274,11 @@ export default function Dashboard() {
             </p>
           </div>
         )}
+        <div style={{ margin: "1rem 0", display: "flex", justifyContent: "center" }}>
+          <button onClick={logout} style={styles.logoutButton}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <div style={styles.main}>
@@ -518,7 +531,8 @@ const styles = {
     color: "#fff",
     display: "flex",
     flexDirection: "column",
-    padding: "2rem 1rem"
+    padding: "2rem 1rem",
+    overflowY: "auto",
   },
   logo: { margin: 0, marginBottom: "2rem", fontSize: "1.5rem", textAlign: "center" },
   menu: { display: "flex", flexDirection: "column", gap: "1rem" },
@@ -531,6 +545,18 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     textAlign: "left"
+  },
+  logoutButton: {
+    fontSize: "1rem",
+    background: "#e74c3c",
+    border: "none",
+    color: "#fff",
+    padding: "0.75rem",
+    borderRadius: "6px",
+    cursor: "pointer",
+    textAlign: "center",
+    flex: "0 0 auto",
+    alignSelf: "flex-start"
   },
   weatherCardSidebar: {
     marginTop: "auto",

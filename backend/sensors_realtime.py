@@ -4,7 +4,7 @@ from collections import defaultdict
 from pythermalcomfort.models import pmv_ppd_iso
 import paho.mqtt.client as mqtt
 import threading
-from db_utils import connect_to_db
+from utils.db_utils import connect_to_db
 import os
 
 USERNAME = os.getenv("MQTT_USERNAME")

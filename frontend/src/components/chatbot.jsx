@@ -102,10 +102,14 @@ export default function ChatWidget() {
     setLoading(true);
 
     try {
+      const token = sessionStorage.getItem("token");
       const resp = await fetch(`http://localhost:7781/api/v1/getAIResponse`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();

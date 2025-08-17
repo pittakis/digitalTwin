@@ -18,7 +18,12 @@ function SensorChart({ sensorId }) {
 
   useEffect(() => {
     if (!sensorId) return;
-    axios.get(`http://localhost:7781/api/v1/sensor/history/${sensorId}`)
+    const token = sessionStorage.getItem("token");
+    axios.get(`http://localhost:7781/api/v1/sensor/history/${sensorId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => {
         const processed = res.data.map(entry => ({
           timestamp: new Date(entry.timestamp).toLocaleTimeString(),

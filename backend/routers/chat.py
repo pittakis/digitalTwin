@@ -1,7 +1,8 @@
 # backend/routers/energy.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import os
+from utils.security import get_current_user
 from openai import OpenAI
 client = OpenAI()
 
@@ -17,7 +18,8 @@ class MessageRequest(BaseModel):
 
 @router.post("/getAIResponse")
 async def getAIResponse(
-    payload: MessageRequest
+    payload: MessageRequest,
+    current_user: str = Depends(get_current_user)
 ):
     # print(f"Received message: {payload.message}")
     try:
@@ -35,7 +37,7 @@ async def getAIResponse(
         raise HTTPException(status_code=402, detail=str(e))
 
 @router.get("/aiHealthCheck")
-async def aiHealthCheck():
+async def aiHealthCheck(current_user: str = Depends(get_current_user)):
     try:
         # print("Calling AI service...")
         # call ChatGPT

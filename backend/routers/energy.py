@@ -1,8 +1,9 @@
 # backend/routers/energy.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import pandas as pd
-from db_utils import connect_to_db
+from utils.security import get_current_user
+from utils.db_utils import connect_to_db
 from ai.LSTM import LSTM_helper
 from typing import Dict, Any
 from datetime import datetime, timezone
@@ -10,7 +11,7 @@ from datetime import datetime, timezone
 router = APIRouter(tags=["EnergySensors"])
 
 @router.get("/energy")
-def get_all_energy_data():
+def get_all_energy_data(current_user: str = Depends(get_current_user)):
     conn = connect_to_db()
     if not conn:
         raise HTTPException(status_code=403, detail="Database connection failed")
@@ -148,7 +149,7 @@ def _normalize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 @router.get("/energy/ai/{sensor_id}")
-def predict_energy_next(sensor_id: str):
+def predict_energy_next(sensor_id: str, current_user: str = Depends(get_current_user)):
     # Fetch last 20 rows (newest first), then pass to helper
     conn = connect_to_db()
     if not conn:
@@ -178,7 +179,7 @@ def predict_energy_next(sensor_id: str):
     return result
 
 @router.get("/energy/notifications")
-def get_energy_notifications():
+def get_energy_notifications(current_user: str = Depends(get_current_user)):
     conn = connect_to_db()
     if not conn:
         raise HTTPException(403, "Database connection failed")

@@ -1,12 +1,10 @@
 # backend/routers/auth.py
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
+from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
-from db_utils import connect_to_db
-
-SECRET_KEY = "to_pio_mistiko_klidi_7777"
-ALGORITHM = "HS256"
+from utils.security import get_current_user, SECRET_KEY, ALGORITHM
+from utils.db_utils import connect_to_db
 
 router = APIRouter(tags=["Authentication"])
 
@@ -33,5 +31,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/healthCheck")
-def health_check():
-    return {"status": "ok"}
+def health_check(current_user: str = Depends(get_current_user)):
+    # If we got here, the token was valid.
+    return {"status": "ok", "user": current_user}

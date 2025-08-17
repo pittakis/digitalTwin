@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from db_utils import connect_to_db
+from fastapi import APIRouter, HTTPException, Depends
+from utils.security import get_current_user
+from utils.db_utils import connect_to_db
 from datetime import datetime, timedelta
 from ai.ai_features import detect_anomalies, getStatus
 
@@ -11,7 +12,7 @@ def fetch_data_as_dict(cursor, query):
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 @router.get("/sensors")
-def get_all_sensor_data():
+def get_all_sensor_data(current_user: str = Depends(get_current_user)):
     sensors_data = {}
     conn = connect_to_db()
     if conn:
@@ -26,7 +27,7 @@ def get_all_sensor_data():
         return sensors_data
 
 @router.get("/getSensorNames")
-def get_sensor_names():
+def get_sensor_names(current_user: str = Depends(get_current_user)):
     sensor_names = []
     conn = connect_to_db()
     if not conn:
@@ -41,7 +42,7 @@ def get_sensor_names():
     return sensors
 
 @router.get("/getSensorData/{sensor_name}")
-def get_sensor_data(sensor_name: str):
+def get_sensor_data(sensor_name: str, current_user: str = Depends(get_current_user)):
     conn = connect_to_db()
     if not conn:
         raise HTTPException(status_code=403, detail="Database connection failed")
@@ -60,7 +61,7 @@ def get_sensor_data(sensor_name: str):
     return dict(zip(columns, sensor_data))
 
 @router.get("/getSensorNotifications")
-def get_sensor_notifications():
+def get_sensor_notifications(current_user: str = Depends(get_current_user)):
     notifications = []
     conn = connect_to_db()
     if not conn:
@@ -95,7 +96,7 @@ def get_sensor_notifications():
     return notifications
     
 @router.get("/sensor/status/{ai_enabled}")
-async def get_sensor_status(ai_enabled: bool = False):
+async def get_sensor_status(ai_enabled: bool = False, current_user: str = Depends(get_current_user)):
     # If AI, fetch raw DB rows and call detect_anomalies(...)
     anomalies = []
     if ai_enabled:
@@ -208,7 +209,7 @@ async def get_sensor_status(ai_enabled: bool = False):
     return allSensors
 
 @router.get("/sensor/history/{sensor_id}")
-async def get_sensor_history(sensor_id: str):
+async def get_sensor_history(sensor_id: str, current_user: str = Depends(get_current_user)):
     conn = connect_to_db()
     if not conn:
         raise HTTPException(status_code=403, detail="Database connection failed")

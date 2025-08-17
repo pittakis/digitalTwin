@@ -1,7 +1,8 @@
 # backend/routers/pmv.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pythermalcomfort.models import pmv_ppd_iso
-from db_utils import connect_to_db
+from utils.security import get_current_user
+from utils.db_utils import connect_to_db
 import math
 
 router = APIRouter(tags=["PMV"])
@@ -10,7 +11,8 @@ router = APIRouter(tags=["PMV"])
 def get_pmv(
     met: float = Query(1.1, description="Metabolic rate (met)"),
     clo: float = Query(0.5, description="Clothing insulation (clo)"),
-    v_air: float = Query(0.1, description="Air velocity in m/s")
+    v_air: float = Query(0.1, description="Air velocity in m/s"),
+    current_user: str = Depends(get_current_user)
 ):
     """
     Calculate PMV/PPD for all AirQuality sensors using passed parameters.
