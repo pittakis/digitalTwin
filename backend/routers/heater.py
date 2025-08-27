@@ -47,10 +47,10 @@ def get_heater_data(current_user: str = Depends(get_current_user)):
             "Measurements": [
                 {
                     "Value": {
-                        "ValvePosition": int(valve_position) if valve_position else None,
+                        "ValvePosition": float(valve_position) if valve_position else None,
                         "TargetTemperature": float(target_temperature) if target_temperature else None,
                         "Temperature": float(temperature) if temperature else None,
-                        "Battery": int(battery) if battery else None
+                        "Battery": float(battery) if battery else None
                     }
                 }
             ]
@@ -70,10 +70,10 @@ def get_sensor_notifications(current_user: str = Depends(get_current_user)):
             s.id,
                 s.name,
                 s.last_updated   AS timestamp,
-                (s.latest_data->>'ValvePosition')::INT        AS valve_position,
+                (s.latest_data->>'ValvePosition')::FLOAT        AS valve_position,
                 (s.latest_data->>'TargetTemperature')::FLOAT  AS target_temperature,
                 (s.latest_data->>'Temperature')::FLOAT        AS temperature,
-                (s.latest_data->>'Battery')::INT              AS battery
+                (s.latest_data->>'Battery')::FLOAT              AS battery
             FROM sensors AS s
             JOIN sensor_types AS st 
             ON s.type_id = st.id
