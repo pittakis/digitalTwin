@@ -174,7 +174,7 @@ def predict_energy_next(sensor_id: str, current_user: str = Depends(get_current_
     result = LSTM_helper.predict_next_from_db_rows(sensor_id, fetched)
 
     if "error" in result:
-        raise HTTPException(status_code=409, detail=result["error"])
+        raise HTTPException(status_code=404, detail=result["error"])
 
     return result
 
