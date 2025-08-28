@@ -42,8 +42,7 @@ const deriveCloFromTemp = (t) => {
 };
 
 const deriveIndoorAirVelocity = (outWind) => {
-  const v = (outWind || 0) * 0.12;
-  return Math.max(0.05, Math.min(v, 0.25));
+  return 0.1;
 };
 
 export default function PMV() {
