@@ -27,6 +27,11 @@ cd digitalTwin
 1. Click Code ▸ Download ZIP.
 2. Extract the archive, then open a terminal in the extracted digitalTwin/ folder.
 
+### Option C - Download the RAR
+1. If you have access to the .rar archive, download it and extract it.
+2. Open a terminal in the extracted digitalTwinWebPlatform/ folder.
+
+
 ## Initialize Project Files (env + public assets)
 There is a initialize/ folder with setup scripts and assets.
 Place the initialize/ folder inside the project root directory.
