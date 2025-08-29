@@ -7,4 +7,3 @@ dtvenv/
 
 # Frontend dependencies
 frontend/node_modules/
-frontend/public/*.glb
