@@ -33,8 +33,9 @@ cd digitalTwin
 
 
 ## Initialize Project Files (env + public assets)
-There is a initialize/ folder with setup scripts and assets.
-Place the initialize/ folder inside the project root directory.
+Extract the initialize.zip that contains setup scripts and the project assets.
+Add your API Keys inside the .env_backend and .env_frontend files
+Place the initialize/ folder at the project's root directory.
 Running the script will:
 - Copy initialize/.env_backend → backend/.env
 - Copy initialize/.env_frontend → frontend/.env
