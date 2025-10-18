@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS users (
     building_id INTEGER NOT NULL REFERENCES buildings(id)
 );
 
+-- temp table
+CREATE TABLE temp (
+    id SERIAL PRIMARY KEY,
+    request VARCHAR(100) NOT NULL,
+    data JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
 -- sensor types table
 CREATE TABLE IF NOT EXISTS sensor_types (
     id SERIAL PRIMARY KEY,

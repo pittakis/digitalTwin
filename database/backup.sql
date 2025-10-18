@@ -55,6 +55,16 @@ ALTER SEQUENCE public.buildings_id_seq OWNER TO admin;
 ALTER SEQUENCE public.buildings_id_seq OWNED BY public.buildings.id;
 
 
+CREATE TABLE public.temp (
+    id SERIAL PRIMARY KEY,
+    request VARCHAR(100) NOT NULL,
+    data JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE public.temp OWNER TO admin;
+
+
 --
 -- Name: sensor_data; Type: TABLE; Schema: public; Owner: admin
 --

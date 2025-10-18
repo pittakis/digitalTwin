@@ -7,6 +7,7 @@ import EnergyOverview from "./pages/EnergyOverview";
 import HeaterOverview from "./pages/HeaterOverview";
 import Building3D from "./pages/BuildingViewer";
 import FloorPlan from "./pages/FloorPlan";
+import UsersManagement from "./pages/UsersManagement";
 import { ChatProvider } from "./components/chatbot";
 import ChatWidget from "./components/chatbot";
 import RequireAuth from "./RequireAuth";
@@ -27,6 +28,7 @@ function App() {
           <Route path="/heater-overview" element={<HeaterOverview />} />
           <Route path="/floorplan" element={<FloorPlan />} />
           <Route path="/building-3d/:floor" element={<Building3D />} />
+          <Route path="/users-management" element={<UsersManagement />} />
         </Route>
       </Routes>
       {showChat && <ChatWidget />}

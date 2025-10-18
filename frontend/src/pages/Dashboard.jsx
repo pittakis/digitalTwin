@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [gridKey, setGridKey] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
+  const isAdmin = sessionStorage.getItem("role") === "admin";
 
   // initial pane height (notifications)
   const initialHeight = window.innerHeight * 0.07;
@@ -227,6 +228,15 @@ export default function Dashboard() {
           >
             🏗️ 3D Building View
           </button>
+          {isAdmin && (
+            
+          <button
+            onClick={() => navigate("/users-management")}
+            style={styles.button}
+          >
+            ⚙️ Users Management
+          </button>
+          )}
         </div>
         <div style={{ margin: "1rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <label
