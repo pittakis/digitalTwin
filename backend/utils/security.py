@@ -5,7 +5,6 @@ from jose import jwt, JWTError, ExpiredSignatureError
 SECRET_KEY = "to_pio_mistiko_klidi_7777"
 ALGORITHM = "HS256"
 
-# if your router prefix is /auth, set tokenUrl="/auth/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
