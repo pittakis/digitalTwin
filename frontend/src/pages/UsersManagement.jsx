@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Trash} from 'lucide-react';
+import { Check, X, Trash } from "lucide-react";
 
 const UsersManagement = () => {
   const navigate = useNavigate();
@@ -22,13 +22,15 @@ const UsersManagement = () => {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError("⚠️ Failed to fetch users.");
+      setError("Failed to fetch users.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleAction = async (tempId, approve) => {
     try {
@@ -40,7 +42,7 @@ const UsersManagement = () => {
       fetchUsers();
     } catch (err) {
       console.error(err);
-      setError("⚠️ Action failed.");
+      setError("Action failed.");
     }
   };
 
@@ -53,17 +55,12 @@ const UsersManagement = () => {
         { user_id: userId, username },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-// Show backend message
-    if (res.data && res.data.message) {
-      console.log(res.data.message);
-      alert(res.data.message); // or use a state to display in the page
-    }
 
-    // Refresh the list if deletion succeeded
-    if (res.data.success) fetchUsers();    } catch (err) {
+      if (res.data && res.data.message) alert(res.data.message);
+      if (res.data.success) fetchUsers();
+    } catch (err) {
       console.error(err);
-      setError("⚠️ Failed to delete user.");
+      setError("Failed to delete user.");
     }
   };
 
@@ -81,65 +78,91 @@ const UsersManagement = () => {
         {loading && <p>Loading users...</p>}
         {error && <p style={styles.error}>{error}</p>}
 
-        {/* Existing Users */}
-        <h3>Existing Users</h3>
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>ID</th>
-                <th style={styles.th}>Username</th>
-                <th style={styles.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={styles.rowEven}>
-                  <td style={styles.td}>{u.id}</td>
-                  <td style={styles.td}>{u.username}</td>
-                  <td style={styles.td}>
-                    <button style={styles.deleteBtn} onClick={() => handleDeleteUser(u.id, u.username)}><Trash /></button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={3} style={styles.td}>No users found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Tables container */}
+        <div style={styles.tablesContainer}>
+          {/* Existing Users */}
+          <div style={styles.tableWrapper}>
+            <h3 style={styles.tableTitle}>Users</h3>
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>ID</th>
+                    <th style={styles.th}>Username</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id} style={styles.rowEven}>
+                      <td style={styles.td}>{u.id}</td>
+                      <td style={styles.td}>{u.username}</td>
+                      <td style={styles.td}>
+                        <button
+                          style={styles.deleteBtn}
+                          onClick={() => handleDeleteUser(u.id, u.username)}
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan={3} style={styles.td}>
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-        {/* Pending Approvals */}
-        <h3 style={{ marginTop: "2rem" }}>Pending Approvals</h3>
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>ID</th>
-                <th style={styles.th}>Username</th>
-                <th style={styles.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pending.map(u => (
-                <tr key={u.id} style={styles.rowOdd}>
-                  <td style={styles.td}>{u.id}</td>
-                  <td style={styles.td}>{u.username}</td>
-                  <td style={styles.td}>
-                    <button style={styles.approveBtn} onClick={() => handleAction(u.id, true)}><Check /></button>
-                    <button style={styles.rejectBtn} onClick={() => handleAction(u.id, false)}><X /></button>
-                  </td>
-                </tr>
-              ))}
-              {pending.length === 0 && (
-                <tr>
-                  <td colSpan={3} style={styles.td}>No pending approvals.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          {/* Pending Approvals */}
+          <div style={styles.tableWrapper}>
+            <h3 style={styles.tableTitle}>Pending Approvals</h3>
+            <div style={{ overflowX: "auto" }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>ID</th>
+                    <th style={styles.th}>Username</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.map((u) => (
+                    <tr key={u.id} style={styles.rowOdd}>
+                      <td style={styles.td}>{u.id}</td>
+                      <td style={styles.td}>{u.username}</td>
+                      <td style={styles.td}>
+                        <button
+                          style={styles.approveBtn}
+                          onClick={() => handleAction(u.id, true)}
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          style={styles.rejectBtn}
+                          onClick={() => handleAction(u.id, false)}
+                        >
+                          <X size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {pending.length === 0 && (
+                    <tr>
+                      <td colSpan={3} style={styles.td}>
+                        No pending approvals.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -181,6 +204,20 @@ const styles = {
     flex: "1 1 auto",
     overflow: "auto",
     padding: "1rem 2rem 2rem",
+  },
+  tablesContainer: {
+    display: "flex",
+    gap: "2rem",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  tableWrapper: {
+    flex: "1 1 48%",
+    minWidth: "320px",
+  },
+  tableTitle: {
+    textAlign: "center",
+    marginBottom: "0.5rem",
   },
   table: {
     width: "100%",
