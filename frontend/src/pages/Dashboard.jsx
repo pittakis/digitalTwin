@@ -36,9 +36,15 @@ export default function Dashboard() {
   }, []);
 
   // Auth guard
+  // Endpoint "/" instead of "/login"
+  // useEffect(() => {
+  //  if (!localStorage.getItem("token")) navigate("/login");
+  // }, [navigate]);
+
   useEffect(() => {
-    if (!localStorage.getItem("token")) navigate("/login");
+    if (!sessionStorage.getItem("token")) navigate("/");
   }, [navigate]);
+
 
   // Fetch weather + forecast
   useEffect(() => {
